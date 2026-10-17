@@ -1,4 +1,5 @@
 #include "CvGameCoreDLL.h"
+#include "CyPlot.h"	// openciv4: pybind11 needs complete types
 #include "CyGame.h"
 #include "CvRandom.h"
 #include "CyCity.h"

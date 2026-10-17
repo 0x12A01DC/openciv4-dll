@@ -49,13 +49,13 @@ template <typename T>
 PyObject* CvDLLPythonIFaceBase::makePythonObject(T* pObj)
 {
 	if (!pObj)
+	{
+		Py_INCREF(Py_None);	// openciv4: callers treat the result as a new reference
 		return Py_None;
+	}
 
-	boost::python::object bpo(pObj);
-	PyObject* pyobj = bpo.ptr();
-	Py_INCREF(pyobj);
-	assert(pyobj->ob_refcnt==2);
-	return pyobj;	// decrefs pyobj when bpo goes out of scope
+	// openciv4: like boost::python::object(T*), the Python object owns a copy of *pObj
+	return pybind11::cast(*pObj, pybind11::return_value_policy::copy).release().ptr();
 }
 
 //

@@ -665,7 +665,7 @@ void CyInfoPythonInterface3()
 		.def("getTechMinTurnsLeft", &CvEventInfo::getTechMinTurnsLeft, "int ()")
 		.def("getPrereqTech", &CvEventInfo::getPrereqTech, "int ()")
 		.def("getUnitClass", &CvEventInfo::getUnitClass, "int ()")
-		.def("getNumUnits", &CvEventTriggerInfo::getNumUnits, "int ()")
+		.def("getNumUnits", &CvEventInfo::getNumUnits, "int ()")	// openciv4: was bound to CvEventTriggerInfo::getNumUnits
 		.def("getBuildingClass", &CvEventInfo::getBuildingClass, "int ()")
 		.def("getBuildingChange", &CvEventInfo::getBuildingChange, "int ()")
 		.def("getHappy", &CvEventInfo::getHappy, "int ()")

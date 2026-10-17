@@ -27,8 +27,14 @@
 #include <assert.h>
 #include <map>
 #include <hash_map>
+#include <algorithm>	// openciv4: VC7.1 pulled this in transitively
 
-#define DllExport   __declspec( dllexport ) 
+// openciv4: the host includes these headers too and imports the DLL's classes.
+#ifdef OC4_GAMECORE_IMPORT
+#define DllExport   __declspec( dllimport )
+#else
+#define DllExport   __declspec( dllexport )
+#endif
 
 //
 // GameBryo

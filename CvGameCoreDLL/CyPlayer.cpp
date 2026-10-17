@@ -588,13 +588,13 @@ bool CyPlayer::canDoCivics(int /*CivicTypes*/ eCivic)
 
 bool CyPlayer::canRevolution(int /*CivicTypes**/ paeNewCivics)
 {
-	return m_pPlayer ? m_pPlayer->canRevolution((CivicTypes*)paeNewCivics) : false;
+	return m_pPlayer ? m_pPlayer->canRevolution((CivicTypes*)(intptr_t)paeNewCivics)	/* openciv4: scripts pass 0 (NULL) */ : false;
 }
 
 void CyPlayer::revolution(int /*CivicTypes**/ paeNewCivics, bool bForce)
 {
 	if (m_pPlayer)
-		m_pPlayer->revolution((CivicTypes*)paeNewCivics, bForce);
+		m_pPlayer->revolution((CivicTypes*)(intptr_t)paeNewCivics, bForce);	// openciv4: scripts pass 0 (NULL)
 }
 
 int CyPlayer::getCivicPercentAnger(int /*CivicTypes*/ eCivic)

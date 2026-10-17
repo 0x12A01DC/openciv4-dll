@@ -22,7 +22,7 @@ bool FAssertDlg( const char*, const char*, const char*, unsigned int, bool& );
 	if( !bIgnoreAlways && !(expr) ) \
 { \
 	if( FAssertDlg( #expr, 0, __FILE__, __LINE__, bIgnoreAlways ) ) \
-{ _asm int 3 } \
+{ __debugbreak(); } \
 } \
 }
 
@@ -32,7 +32,7 @@ bool FAssertDlg( const char*, const char*, const char*, unsigned int, bool& );
 	if( !bIgnoreAlways && !(expr) ) \
 { \
 	if( FAssertDlg( #expr, msg, __FILE__, __LINE__, bIgnoreAlways ) ) \
-{ _asm int 3 } \
+{ __debugbreak(); } \
 } \
 }
 

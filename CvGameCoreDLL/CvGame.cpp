@@ -7622,9 +7622,9 @@ void CvGame::read(FDataStreamBase* pStream)
 
 	{
 		clearReplayMessageMap();
-		ReplayMessageList::_Alloc::size_type iSize;
+		unsigned int iSize;
 		pStream->Read(&iSize);
-		for (ReplayMessageList::_Alloc::size_type i = 0; i < iSize; i++)
+		for (unsigned int i = 0; i < iSize; i++)
 		{
 			CvReplayMessage* pMessage = new CvReplayMessage(0);
 			if (NULL != pMessage)
@@ -7830,7 +7830,7 @@ void CvGame::write(FDataStreamBase* pStream)
 	m_mapRand.write(pStream);
 	m_sorenRand.write(pStream);
 
-	ReplayMessageList::_Alloc::size_type iSize = m_listReplayMessages.size();
+	unsigned int iSize = m_listReplayMessages.size();
 	pStream->Write(iSize);
 	ReplayMessageList::const_iterator it;
 	for (it = m_listReplayMessages.begin(); it != m_listReplayMessages.end(); it++)

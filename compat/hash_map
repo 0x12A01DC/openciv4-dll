@@ -1,0 +1,9 @@
+#pragma once
+// openciv4: VC7.1's <hash_map> no longer exists; stdext::hash_map maps to std::unordered_map.
+// Iteration order differs from the original, see gamecore/README.md.
+#include <unordered_map>
+namespace stdext
+{
+	template <class K, class V, class H = std::hash<K>, class Eq = std::equal_to<K>, class A = std::allocator<std::pair<const K, V>>>
+	using hash_map = std::unordered_map<K, V, H, Eq, A>;
+}

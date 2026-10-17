@@ -109,6 +109,12 @@ public:
 
 	virtual void		Write(double value) = 0;
 	virtual void		Write(int count, const double values[]) = 0;
+
+#ifdef _WIN64
+	// openciv4: container sizes were 32-bit on the original x86 build; keep the
+	// save format by writing size_t as 4 bytes (non-virtual, vtable unchanged).
+	void				Write(size_t value) { Write(static_cast<unsigned int>(value)); }
+#endif
 };
 
 #endif	//FDATASTREAMBASE_H

@@ -557,7 +557,7 @@ bool CyUnit::canBuildRoute()
 
 int /*BuildTypes*/ CyUnit::getBuildType()
 {
-	return (int) m_pUnit ? m_pUnit->getBuildType() : (int) NO_BUILD;
+	return m_pUnit ? (int) m_pUnit->getBuildType() : (int) NO_BUILD;	// openciv4: was (int) m_pUnit ? ..., truncating the pointer on x64
 }
 
 int CyUnit::workRate(bool bMax)
