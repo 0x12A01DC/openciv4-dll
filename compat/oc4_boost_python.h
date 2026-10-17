@@ -318,9 +318,9 @@ namespace boost::python
 			const long n = static_cast<long>(v);
 			py::object inst = m_type(n);
 			m_type.attr(name) = inst;
-			m_type.attr("names")[py::str(name)] = inst;
+			m_type.attr("names")[py::reinterpret_steal<py::object>(PyString_FromString(name))] = inst;
 			m_type.attr("values")[py::int_(n)] = inst;
-			m_type.attr("_oc4names")[py::int_(n)] = py::str(name);
+			m_type.attr("_oc4names")[py::int_(n)] = py::reinterpret_steal<py::object>(PyString_FromString(name));
 			return *this;
 		}
 

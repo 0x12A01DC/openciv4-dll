@@ -45,6 +45,9 @@ class Oc4Enum(int):
 			return py::reinterpret_borrow<py::object>(base);
 		}
 
+		// Python 2 str (bytes); pybind11's py::str is unicode on Python 2.
+		py::object bytesName(const char* s) { return py::reinterpret_steal<py::object>(PyString_FromString(s)); }
+
 		py::dict registry()
 		{
 			py::module_ m = currentModule();
@@ -68,12 +71,12 @@ class Oc4Enum(int):
 		attrs["values"] = py::dict();
 		attrs["_oc4names"] = py::dict();
 		py::object typeType = py::reinterpret_borrow<py::object>(reinterpret_cast<PyObject*>(&PyType_Type));
-		return typeType(py::str(name), py::make_tuple(enumBase()), attrs);
+		return typeType(bytesName(name), py::make_tuple(enumBase()), attrs);
 	}
 
 	void registerEnumType(const char* typeIdName, py::handle type)
 	{
-		registry()[py::str(typeIdName)] = type;
+		registry()[bytesName(typeIdName)] = type;
 	}
 
 	PyObject* findEnumType(const char* typeIdName)
