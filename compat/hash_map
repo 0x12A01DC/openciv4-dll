@@ -1,9 +1,310 @@
 #pragma once
-// openciv4: VC7.1's <hash_map> no longer exists; stdext::hash_map maps to std::unordered_map.
-// Iteration order differs from the original, see gamecore/README.md.
-#include <unordered_map>
+
+// openciv4: stdext::hash_map as the VC7.1 standard library the original DLL was built with
+// behaves, so that iteration order matches the original game: CvPlayer::doEvents expires
+// events in m_mapEventsOccured order, and saves list every map in iteration order.
+//
+// The observable behaviour, reconstructed from saves of the original game:
+//  - hash of integral and enum keys: (unsigned 32-bit) key ^ 0xDEADBEEF;
+//  - linear hashing: starting with 1 bucket in use (mask 1, a table of 8), one more bucket
+//    is opened before an insertion that finds size() / 4 >= buckets in use, by splitting
+//    the bucket that the new one takes its keys from; the table doubles when full;
+//    clearing the whole map starts over with the initial table;
+//  - iteration visits buckets in index order and, within a bucket, keys in ascending order.
+//
+// Elements live in one std::list in iteration order, as in the original, so references and
+// iterators stay valid until their element is erased. String keys (never iterated by the
+// game) use FNV-1a instead of VC7.1's string hash.
+
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <list>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
 namespace stdext
 {
-	template <class K, class V, class H = std::hash<K>, class Eq = std::equal_to<K>, class A = std::allocator<std::pair<const K, V>>>
-	using hash_map = std::unordered_map<K, V, H, Eq, A>;
+	template <class K>
+	std::uint32_t hash_value(const K& key)
+		requires(std::is_integral_v<K> || std::is_enum_v<K>)
+	{
+		if constexpr (std::is_enum_v<K>)
+			return static_cast<std::uint32_t>(static_cast<std::underlying_type_t<K>>(key)) ^ 0xDEADBEEFu;
+		else
+			return static_cast<std::uint32_t>(key) ^ 0xDEADBEEFu;
+	}
+
+	inline std::uint32_t hash_value(const std::string& key)
+	{
+		std::uint32_t h = 2166136261u;
+		for (const unsigned char c : key)
+			h = (h ^ c) * 16777619u;
+		return h;
+	}
+
+	template <class K, class Pr = std::less<K>>
+	class hash_compare
+	{
+	public:
+		enum
+		{
+			bucket_size = 4,
+			min_buckets = 8
+		};
+
+		hash_compare() = default;
+		explicit hash_compare(Pr pred) : m_pred(pred) {}
+
+		std::size_t operator()(const K& key) const { return hash_value(key); }
+		bool operator()(const K& a, const K& b) const { return m_pred(a, b); }
+
+	private:
+		Pr m_pred{};
+	};
+
+	template <class K, class V, class Tr = hash_compare<K, std::less<K>>, class A = std::allocator<std::pair<const K, V>>>
+	class hash_map
+	{
+		using List = std::list<std::pair<const K, V>, A>;
+
+	public:
+		using key_type = K;
+		using mapped_type = V;
+		using value_type = std::pair<const K, V>;
+		using key_compare = Tr;
+		using allocator_type = A;
+		using size_type = std::size_t;
+		using difference_type = std::ptrdiff_t;
+		using reference = value_type&;
+		using const_reference = const value_type&;
+		using iterator = typename List::iterator;
+		using const_iterator = typename List::const_iterator;
+
+		hash_map() { reset(); }
+		hash_map(const hash_map& other) : m_list(other.m_list), m_mask(other.m_mask), m_maxidx(other.m_maxidx), m_comp(other.m_comp)
+		{
+			rebuild(other.m_begin.size());
+		}
+		hash_map(hash_map&& other) : m_list(std::move(other.m_list)), m_mask(other.m_mask), m_maxidx(other.m_maxidx), m_comp(other.m_comp)
+		{
+			rebuild(other.m_begin.size());
+			other.clear();
+		}
+		hash_map& operator=(const hash_map& other)
+		{
+			if (this != &other)
+			{
+				m_list = other.m_list;
+				m_mask = other.m_mask;
+				m_maxidx = other.m_maxidx;
+				m_comp = other.m_comp;
+				rebuild(other.m_begin.size());
+			}
+			return *this;
+		}
+		hash_map& operator=(hash_map&& other)
+		{
+			if (this != &other)
+			{
+				m_list = std::move(other.m_list);
+				m_mask = other.m_mask;
+				m_maxidx = other.m_maxidx;
+				m_comp = other.m_comp;
+				rebuild(other.m_begin.size());
+				other.clear();
+			}
+			return *this;
+		}
+
+		iterator begin() { return m_list.begin(); }
+		iterator end() { return m_list.end(); }
+		const_iterator begin() const { return m_list.begin(); }
+		const_iterator end() const { return m_list.end(); }
+		size_type size() const { return m_list.size(); }
+		bool empty() const { return m_list.empty(); }
+
+		iterator find(const K& key)
+		{
+			const size_type b = bucket(key);
+			for (iterator it = m_begin[b]; it != m_begin[b + 1]; ++it)
+			{
+				if (m_comp(key, it->first))
+					break; // ascending within the bucket
+				if (!m_comp(it->first, key))
+					return it;
+			}
+			return end();
+		}
+		const_iterator find(const K& key) const { return const_cast<hash_map*>(this)->find(key); }
+		size_type count(const K& key) const { return find(key) != end() ? 1 : 0; }
+
+		std::pair<iterator, bool> insert(const value_type& value)
+		{
+			if (m_maxidx <= size() / Tr::bucket_size)
+				grow();
+			const size_type b = bucket(value.first);
+			iterator pos = m_begin[b];
+			for (; pos != m_begin[b + 1]; ++pos)
+			{
+				if (m_comp(value.first, pos->first))
+					break;
+				if (!m_comp(pos->first, value.first))
+					return { pos, false };
+			}
+			const iterator it = m_list.insert(pos, value);
+			for (size_type j = b; m_begin[j] == pos;) // new first element of its bucket
+			{
+				m_begin[j] = it;
+				if (j-- == 0)
+					break;
+			}
+			return { it, true };
+		}
+		template <class It>
+		void insert(It first, It last)
+		{
+			for (; first != last; ++first)
+				insert(*first);
+		}
+
+		V& operator[](const K& key)
+		{
+			const iterator it = find(key);
+			return it != end() ? it->second : insert(value_type(key, V())).first->second;
+		}
+
+		iterator erase(iterator it)
+		{
+			const size_type b = bucket(it->first);
+			const iterator next = std::next(it);
+			for (size_type j = b; m_begin[j] == it;)
+			{
+				m_begin[j] = next;
+				if (j-- == 0)
+					break;
+			}
+			m_list.erase(it);
+			return next;
+		}
+		iterator erase(iterator first, iterator last)
+		{
+			if (first == begin() && last == end())
+			{
+				clear();
+				return end();
+			}
+			while (first != last)
+				first = erase(first);
+			return first;
+		}
+		size_type erase(const K& key)
+		{
+			const iterator it = find(key);
+			if (it == end())
+				return 0;
+			erase(it);
+			return 1;
+		}
+
+		void clear()
+		{
+			m_list.clear();
+			reset();
+		}
+
+		void swap(hash_map& other)
+		{
+			const size_type mine = m_begin.size(), theirs = other.m_begin.size();
+			m_list.swap(other.m_list);
+			std::swap(m_mask, other.m_mask);
+			std::swap(m_maxidx, other.m_maxidx);
+			std::swap(m_comp, other.m_comp);
+			rebuild(theirs);
+			other.rebuild(mine);
+		}
+
+	private:
+		size_type bucket(const K& key) const
+		{
+			size_type n = static_cast<std::uint32_t>(m_comp(key)) & m_mask;
+			if (m_maxidx <= n)
+				n -= (m_mask >> 1) + 1;
+			return n;
+		}
+
+		void reset()
+		{
+			m_begin.assign(Tr::min_buckets + 1, m_list.end());
+			m_mask = 1;
+			m_maxidx = 1;
+		}
+
+		// Opens bucket m_maxidx by moving its keys out of the bucket they shared.
+		void grow()
+		{
+			if (m_begin.size() - 1 <= m_maxidx)
+			{
+				m_mask = ((m_begin.size() - 1) << 1) - 1;
+				m_begin.resize(m_mask + 2, m_list.end());
+			}
+			else if (m_mask < m_maxidx)
+				m_mask = (m_mask << 1) + 1;
+
+			const size_type split = m_maxidx - (m_mask >> 1) - 1;
+			const size_type opened = m_maxidx++;
+			const iterator first = m_begin[split], last = m_begin[split + 1];
+			std::vector<iterator> moving;
+			iterator stays = last;
+			for (iterator it = first; it != last; ++it)
+			{
+				if ((static_cast<std::uint32_t>(m_comp(it->first)) & m_mask) != split)
+					moving.push_back(it);
+				else if (stays == last)
+					stays = it;
+			}
+			if (moving.empty())
+				return;
+			if (stays != first)
+				for (size_type j = split; m_begin[j] == first;)
+				{
+					m_begin[j] = stays;
+					if (j-- == 0)
+						break;
+				}
+			// The opened bucket is the last one: its keys go to the end, still ascending.
+			for (const iterator it : moving)
+				m_list.splice(m_list.end(), m_list, it);
+			m_begin[opened] = moving.front();
+			for (size_type k = opened; k-- > 0 && m_begin[k] == m_list.end();)
+				m_begin[k] = moving.front();
+		}
+
+		// Recomputes the bucket starts from the list order (after copying or moving the list).
+		void rebuild(size_type tableSize)
+		{
+			m_begin.assign(tableSize, m_list.end());
+			std::vector<bool> set(tableSize, false);
+			for (iterator it = m_list.begin(); it != m_list.end(); ++it)
+			{
+				const size_type b = bucket(it->first);
+				if (!set[b])
+				{
+					m_begin[b] = it;
+					set[b] = true;
+				}
+			}
+			for (size_type b = m_maxidx; b-- > 0;)
+				if (!set[b])
+					m_begin[b] = m_begin[b + 1];
+		}
+
+		List m_list;
+		std::vector<iterator> m_begin; // bucket b is [m_begin[b], m_begin[b + 1]); unused buckets hold end()
+		size_type m_mask = 1;
+		size_type m_maxidx = 1;
+		Tr m_comp;
+	};
 }

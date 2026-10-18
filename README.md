@@ -10,7 +10,12 @@ SDK terms; see the game's SDK documentation.
 * `compat/boost/python*.hpp`: the subset of Boost.Python 1.32 used by the SDK (`class_`,
   `bases`, `def`, `enum_`, return value policies, `tuple`/`list`), implemented on pybind11,
   so the `Cy*Interface*.cpp` binding files and mod DLLs compile unchanged.
-* `compat/hash_map`: `stdext::hash_map` as an alias of `std::unordered_map`.
+* `compat/hash_map`: `stdext::hash_map` behaving like the VC7.1 one the original DLL was
+  built with (linear hashing, `key ^ 0xDEADBEEF`, keys ascending within a bucket), so maps
+  iterate in the original order: `CvPlayer::doEvents` expires events in that order, and
+  saves list maps in it. Reconstructed from original saves and checked against them by
+  `tests/hash_map_test.cpp`; a BtS save loaded and saved again comes out byte-identical
+  apart from what the DLL itself changes on load (session counter, reload replay message).
 
 Boost.Python behaviours the SDK depends on and the compat layer reproduces: enums are
 `int` subclasses with `names`/`values` (picklable as ints), and `make_tuple` copies the
@@ -18,7 +23,7 @@ object behind a raw pointer (`CyPlayer::firstCity` deletes it right after).
 
 Porting notes (what differs from the original DLL):
 
-* `stdext::hash_map` iteration order differs from VC7.1's, which may change the order some
-  loops visit vote sources, events and turn scores.
+* String-keyed `stdext::hash_map`s (info and type lookups) hash with FNV-1a instead of
+  VC7.1's string hash; the game never iterates them, so only lookup speed differs.
 * Floating point is SSE2 (x64) instead of x87, so float-based AI evaluations can round
   differently from the original 32-bit DLL.
