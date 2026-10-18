@@ -4045,7 +4045,7 @@ const TCHAR* CvUnitInfo::getEarlyArtDefineTag(int i, UnitArtStyleTypes eStyle) c
 		}
 	}
 
-	return (m_paszEarlyArtDefineTags) ? m_paszEarlyArtDefineTags[i] : NULL;
+	return (m_paszEarlyArtDefineTags) ? m_paszEarlyArtDefineTags[i].c_str() : NULL; // openciv4: not a pointer into a temporary CvString
 }
 
 void CvUnitInfo::setEarlyArtDefineTag(int i, const TCHAR* szVal)
@@ -4074,7 +4074,7 @@ const TCHAR* CvUnitInfo::getLateArtDefineTag(int i, UnitArtStyleTypes eStyle) co
 
 	}
 
-	return (m_paszLateArtDefineTags) ? m_paszLateArtDefineTags[i] : NULL;
+	return (m_paszLateArtDefineTags) ? m_paszLateArtDefineTags[i].c_str() : NULL; // openciv4: not a pointer into a temporary CvString
 }
 
 void CvUnitInfo::setLateArtDefineTag(int i, const TCHAR* szVal)
@@ -4103,7 +4103,7 @@ const TCHAR* CvUnitInfo::getMiddleArtDefineTag(int i, UnitArtStyleTypes eStyle) 
 
 	}
 
-	return (m_paszMiddleArtDefineTags) ? m_paszMiddleArtDefineTags[i] : NULL;
+	return (m_paszMiddleArtDefineTags) ? m_paszMiddleArtDefineTags[i].c_str() : NULL; // openciv4: not a pointer into a temporary CvString
 }
 
 void CvUnitInfo::setMiddleArtDefineTag(int i, const TCHAR* szVal)
@@ -4117,7 +4117,7 @@ const TCHAR* CvUnitInfo::getUnitNames(int i) const
 {
 	FAssertMsg(i < getNumUnitNames(), "Index out of bounds");
 	FAssertMsg(i > -1, "Index out of bounds");
-	return (m_paszUnitNames) ? m_paszUnitNames[i] : NULL;
+	return (m_paszUnitNames) ? m_paszUnitNames[i].c_str() : NULL; // openciv4: not a pointer into a temporary CvString
 }
 
 const TCHAR* CvUnitInfo::getFormationType() const

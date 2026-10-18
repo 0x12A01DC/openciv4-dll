@@ -32,11 +32,17 @@ Porting notes (what differs from the original DLL):
   `None`); the engine must always write the result. The host converts like
   `PyInt_AsLong`, so `None` gives -1 (true), as the original evidently does.
 
+* `CvUnitInfo::get{Early,Middle,Late}ArtDefineTag` and `getUnitNames` returned a pointer into
+  a temporary (`cond ? m_paszTags[i] : NULL` makes a `CvString` copy); the original works as
+  long as nothing overwrites the stack in between. Fixed with `.c_str()`.
+
 Changes for speed (game results unchanged: identical per-turn sync checksums, also across
 save and load):
 
 * Built with link-time code generation (`OC4_LTO`, on by default): the AI spends much of a
   turn in small accessors defined in other files. About -40% turn time on its own.
+* Optionally profile-guided (`OC4_PGO`, driven by `tools\pgo.cmd`): another 5-10% on
+  late-game turns, measured on maps and seeds other than the training games.
 * `pathValid` tests the danger of the node being expanded once per path search instead of
   once per neighbour (`g_iPathSearch`, `CvPlayerAI::AI_isPlotDangerous`, which also stops
   at the first danger found).
