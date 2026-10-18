@@ -323,6 +323,9 @@ int pathDestValid(int iToX, int iToY, const void* pointer, FAStar* finder);
 int pathHeuristic(int iFromX, int iFromY, int iToX, int iToY);
 int pathCost(FAStarNode* parent, FAStarNode* node, int data, const void* pointer, FAStar* finder);
 int pathValid(FAStarNode* parent, FAStarNode* node, int data, const void* pointer, FAStar* finder);
+// openciv4: incremented before every path search using pathValid, so pathValid can reuse a
+// result per node within one search (a search does not change the game state)
+extern int g_iPathSearch;
 int pathAdd(FAStarNode* parent, FAStarNode* node, int data, const void* pointer, FAStar* finder);
 int stepDestValid(int iToX, int iToY, const void* pointer, FAStar* finder);
 int stepHeuristic(int iFromX, int iFromY, int iToX, int iToY);

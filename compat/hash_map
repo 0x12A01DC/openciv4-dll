@@ -21,6 +21,7 @@
 #include <functional>
 #include <list>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -37,13 +38,14 @@ namespace stdext
 			return static_cast<std::uint32_t>(key) ^ 0xDEADBEEFu;
 	}
 
-	inline std::uint32_t hash_value(const std::string& key)
+	inline std::uint32_t hash_value(std::string_view key)
 	{
 		std::uint32_t h = 2166136261u;
 		for (const unsigned char c : key)
 			h = (h ^ c) * 16777619u;
 		return h;
 	}
+	inline std::uint32_t hash_value(const std::string& key) { return hash_value(std::string_view(key)); }
 
 	template <class K, class Pr = std::less<K>>
 	class hash_compare
@@ -139,6 +141,28 @@ namespace stdext
 			return end();
 		}
 		const_iterator find(const K& key) const { return const_cast<hash_map*>(this)->find(key); }
+		// Lookups by C string without building a std::string (CvGlobals::getDefineINT and
+		// getInfoTypeForString run many times a turn).
+		iterator find(const char* key)
+			requires std::is_same_v<K, std::string>
+		{
+			const std::string_view text(key);
+			const size_type b = bucketOfHash(hash_value(text));
+			for (iterator it = m_begin[b]; it != m_begin[b + 1]; ++it)
+			{
+				const int c = std::string_view(it->first).compare(text);
+				if (c > 0)
+					break;
+				if (c == 0)
+					return it;
+			}
+			return end();
+		}
+		const_iterator find(const char* key) const
+			requires std::is_same_v<K, std::string>
+		{
+			return const_cast<hash_map*>(this)->find(key);
+		}
 		size_type count(const K& key) const { return find(key) != end() ? 1 : 0; }
 
 		std::pair<iterator, bool> insert(const value_type& value)
@@ -227,9 +251,10 @@ namespace stdext
 		}
 
 	private:
-		size_type bucket(const K& key) const
+		size_type bucket(const K& key) const { return bucketOfHash(static_cast<std::uint32_t>(m_comp(key))); }
+		size_type bucketOfHash(std::uint32_t hash) const
 		{
-			size_type n = static_cast<std::uint32_t>(m_comp(key)) & m_mask;
+			size_type n = hash & m_mask;
 			if (m_maxidx <= n)
 				n -= (m_mask >> 1) + 1;
 			return n;

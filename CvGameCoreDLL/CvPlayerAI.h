@@ -81,6 +81,9 @@ public:
 
 	bool AI_isCommercePlot(CvPlot* pPlot) const;
 	int AI_getPlotDanger(CvPlot* pPlot, int iRange = -1, bool bTestMoves = true) const;
+	// openciv4: AI_getPlotDanger(pPlot) > 0, stopping at the first danger found (path callbacks)
+	bool AI_isPlotDangerous(CvPlot* pPlot) const;
+	int AI_countPlotDanger(CvPlot* pPlot, int iRange, bool bTestMoves, bool bAnyDanger) const;
 	int AI_getUnitDanger(CvUnit* pUnit, int iRange = -1, bool bTestMoves = true, bool bAnyDanger = true) const;
 	int AI_getWaterDanger(CvPlot* pPlot, int iRange, bool bTestMoves = true) const;
 

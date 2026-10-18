@@ -1255,7 +1255,7 @@ int pathDestValid(int iToX, int iToY, const void* pointer, FAStar* finder)
 		{
 			if (!(pSelectionGroup->canFight()) && !(pSelectionGroup->alwaysInvisible()))
 			{
-				if (GET_PLAYER(pSelectionGroup->getHeadOwner()).AI_getPlotDanger(pToPlot) > 0)
+				if (GET_PLAYER(pSelectionGroup->getHeadOwner()).AI_isPlotDangerous(pToPlot))
 				{
 					return FALSE;
 				}
@@ -1477,6 +1477,8 @@ int pathCost(FAStarNode* parent, FAStarNode* node, int data, const void* pointer
 }
 
 
+int g_iPathSearch = 0;
+
 int pathValid(FAStarNode* parent, FAStarNode* node, int data, const void* pointer, FAStar* finder)
 {
 	CvSelectionGroup* pSelectionGroup;
@@ -1550,7 +1552,18 @@ int pathValid(FAStarNode* parent, FAStarNode* node, int data, const void* pointe
 			{
 				if (!(pSelectionGroup->canFight()) && !(pSelectionGroup->alwaysInvisible()))
 				{
-					if (GET_PLAYER(pSelectionGroup->getHeadOwner()).AI_getPlotDanger(pFromPlot) > 0)
+					// openciv4: pFromPlot is the plot of the node being expanded, the same for
+					// all its neighbours: test it once per node and search
+					static int s_iDangerSearch = -1;
+					static const FAStarNode* s_pDangerNode = NULL;
+					static bool s_bDangerous = false;
+					if (s_iDangerSearch != g_iPathSearch || s_pDangerNode != parent)
+					{
+						s_iDangerSearch = g_iPathSearch;
+						s_pDangerNode = parent;
+						s_bDangerous = GET_PLAYER(pSelectionGroup->getHeadOwner()).AI_isPlotDangerous(pFromPlot);
+					}
+					if (s_bDangerous)
 					{
 						return FALSE;
 					}

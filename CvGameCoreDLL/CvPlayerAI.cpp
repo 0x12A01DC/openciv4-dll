@@ -2676,6 +2676,19 @@ bool CvPlayerAI::AI_isCommercePlot(CvPlot* pPlot) const
 
 int CvPlayerAI::AI_getPlotDanger(CvPlot* pPlot, int iRange, bool bTestMoves) const
 {
+	return AI_countPlotDanger(pPlot, iRange, bTestMoves, false);
+}
+
+bool CvPlayerAI::AI_isPlotDangerous(CvPlot* pPlot) const
+{
+	return AI_countPlotDanger(pPlot, -1, true, true) > 0;
+}
+
+// openciv4: AI_getPlotDanger's body; bAnyDanger returns as soon as the result is known to be
+// positive, for callers that only test > 0 (the path callbacks, run for every plot a path
+// search reaches).
+int CvPlayerAI::AI_countPlotDanger(CvPlot* pPlot, int iRange, bool bTestMoves, bool bAnyDanger) const
+{
 	PROFILE_FUNC();
 
 	CLLNode<IDInfo>* pUnitNode;
@@ -2694,6 +2707,8 @@ int CvPlayerAI::AI_getPlotDanger(CvPlot* pPlot, int iRange, bool bTestMoves) con
 	{
 		iRange = DANGER_RANGE;
 	}
+
+	const bool bBorderDangerCounts = !isHuman() && !pPlot->isCity(); // openciv4
 
 	for (iDX = -(iRange); iDX <= iRange; iDX++)
 	{
@@ -2716,6 +2731,10 @@ int CvPlayerAI::AI_getPlotDanger(CvPlot* pPlot, int iRange, bool bTestMoves) con
 				        {
 				            iBorderDanger++;
 				        }
+						if (bAnyDanger && iBorderDanger > 0 && bBorderDangerCounts) // openciv4
+						{
+							return 1;
+						}
 				    }
 
 
@@ -2747,6 +2766,10 @@ int CvPlayerAI::AI_getPlotDanger(CvPlot* pPlot, int iRange, bool bTestMoves) con
 												iCount++;
 											}
 										}
+										if (bAnyDanger && iCount > 0) // openciv4
+										{
+											return iCount;
+										}
 									}
 								}
 							}
@@ -2759,7 +2782,7 @@ int CvPlayerAI::AI_getPlotDanger(CvPlot* pPlot, int iRange, bool bTestMoves) con
 
 	if (iBorderDanger > 0)
 	{
-	    if (!isHuman() && !pPlot->isCity())
+	    if (bBorderDangerCounts)
 	    {
             iCount += iBorderDanger;
 	    }

@@ -27,3 +27,20 @@ Porting notes (what differs from the original DLL):
   VC7.1's string hash; the game never iterates them, so only lookup speed differs.
 * Floating point is SSE2 (x64) instead of x87, so float-based AI evaluations can round
   differently from the original 32-bit DLL.
+* The DLL tests some Python callback results without initialising them (event trigger
+  checks such as `PythonCanDoCity` read `lResult` after callbacks that may return
+  `None`); the engine must always write the result. The host converts like
+  `PyInt_AsLong`, so `None` gives -1 (true), as the original evidently does.
+
+Changes for speed (game results unchanged: identical per-turn sync checksums, also across
+save and load):
+
+* Built with link-time code generation (`OC4_LTO`, on by default): the AI spends much of a
+  turn in small accessors defined in other files. About -40% turn time on its own.
+* `pathValid` tests the danger of the node being expanded once per path search instead of
+  once per neighbour (`g_iPathSearch`, `CvPlayerAI::AI_isPlotDangerous`, which also stops
+  at the first danger found).
+* `CvGame::countCivTeamsEverAlive` counts with a flag array instead of building a
+  `std::set` on every call.
+* `stdext::hash_map<std::string, ...>::find(const char*)` does not build a `std::string`
+  (`CvGlobals::getDefineINT`, `getInfoTypeForString`).

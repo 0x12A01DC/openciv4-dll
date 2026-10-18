@@ -2904,7 +2904,9 @@ int CvGame::countCivTeamsAlive() const
 
 int CvGame::countCivTeamsEverAlive() const
 {
-	std::set<int> setTeamsEverAlive;
+	// openciv4: a flag per team instead of a std::set built on every call (hot in AI code)
+	bool abTeamEverAlive[MAX_TEAMS] = {};
+	int iCount = 0;
 
 	for (int iI = 0; iI < MAX_CIV_PLAYERS; iI++)
 	{
@@ -2913,12 +2915,17 @@ int CvGame::countCivTeamsEverAlive() const
 		{
 			if (kPlayer.getParent() == NO_PLAYER)
 			{
-				setTeamsEverAlive.insert(kPlayer.getTeam());
+				const int iTeam = kPlayer.getTeam();
+				if (iTeam >= 0 && iTeam < MAX_TEAMS && !abTeamEverAlive[iTeam])
+				{
+					abTeamEverAlive[iTeam] = true;
+					++iCount;
+				}
 			}
 		}
 	}
 
-	return setTeamsEverAlive.size();
+	return iCount;
 }
 
 
