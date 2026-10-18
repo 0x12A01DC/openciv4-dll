@@ -12,6 +12,10 @@ SDK terms; see the game's SDK documentation.
   so the `Cy*Interface*.cpp` binding files and mod DLLs compile unchanged.
 * `compat/hash_map`: `stdext::hash_map` as an alias of `std::unordered_map`.
 
+Boost.Python behaviours the SDK depends on and the compat layer reproduces: enums are
+`int` subclasses with `names`/`values` (picklable as ints), and `make_tuple` copies the
+object behind a raw pointer (`CyPlayer::firstCity` deletes it right after).
+
 Porting notes (what differs from the original DLL):
 
 * `stdext::hash_map` iteration order differs from VC7.1's, which may change the order some

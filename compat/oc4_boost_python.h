@@ -95,7 +95,14 @@ namespace boost::python
 	using list = py::list;
 	using dict = py::dict;
 	using str = py::str;
-	using py::make_tuple;
+
+	// Boost.Python converts a raw pointer argument by copying the pointee; the SDK relies
+	// on that (CyPlayer::firstCity builds a tuple from a new CyCity and deletes it).
+	template <class... Args>
+	tuple make_tuple(Args&&... args)
+	{
+		return py::make_tuple<py::return_value_policy::copy>(std::forward<Args>(args)...);
+	}
 
 	struct reference_existing_object
 	{
