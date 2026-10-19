@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <functional>
 #include <list>
+#include <map>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -331,5 +332,16 @@ namespace stdext
 		size_type m_mask = 1;
 		size_type m_maxidx = 1;
 		Tr m_comp;
+	};
+
+	// Pointer keys (AND2's CvReachablePlotSet): VC7.1 hashed the address, so the original's
+	// iteration order moved with wherever the heap put the objects. These iterate in address
+	// order instead, which for elements of one array (CvMap's plots) is their index order
+	// and the same in every run.
+	template <class T, class V, class Tr, class A>
+	class hash_map<T*, V, Tr, A> : public std::map<T*, V, std::less<T*>, A>
+	{
+	public:
+		using std::map<T*, V, std::less<T*>, A>::map;
 	};
 }

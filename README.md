@@ -18,8 +18,10 @@ SDK terms; see the game's SDK documentation.
   apart from what the DLL itself changes on load (session counter, reload replay message).
 
 Boost.Python behaviours the SDK depends on and the compat layer reproduces: enums are
-`int` subclasses with `names`/`values` (picklable as ints), and `make_tuple` copies the
-object behind a raw pointer (`CyPlayer::firstCity` deletes it right after).
+`int` subclasses with `names`/`values` (picklable as ints), `make_tuple` copies the
+object behind a raw pointer (`CyPlayer::firstCity` deletes it right after), and
+`std::string`/`char*` results are Python 2 `str` (pybind11 would make them `unicode`;
+scripts unpickle `getScriptData()` and compare types with `str` literals).
 
 Porting notes (what differs from the original DLL):
 
@@ -31,6 +33,12 @@ Porting notes (what differs from the original DLL):
   checks such as `PythonCanDoCity` read `lResult` after callbacks that may return
   `None`); the engine must always write the result. The host converts like
   `PyInt_AsLong`, so `None` gives -1 (true), as the original evidently does.
+
+* `gDLL` in code the engine compiles from these headers (the interfaces' inline helpers such
+  as `CvDLLFeatureIFaceBase::destroy`) goes through the exported `getDLLIFaceNonInl()`, as
+  in the original EXE, instead of the inline accessor the DLL uses: mods change `CvGlobals`
+  (AND2's is an 8-byte proxy), and the engine must not depend on its layout. The engine
+  otherwise only inlines `CvInitCore`'s accessors, whose fields mods keep in place.
 
 * `CvUnitInfo::get{Early,Middle,Late}ArtDefineTag` and `getUnitNames` returned a pointer into
   a temporary (`cond ? m_paszTags[i] : NULL` makes a `CvString` copy); the original works as

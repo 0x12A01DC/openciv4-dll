@@ -1206,7 +1206,7 @@ inline CvGlobals& CvGlobals::getInstance()
 // helpers
 //
 #define GC CvGlobals::getInstance()
-#ifndef _USRDLL
+#if !defined(_USRDLL) || defined(OC4_GAMECORE_IMPORT) // openciv4: the engine (built with _USRDLL) only uses exports, mods change CvGlobals
 #define gDLL GC.getDLLIFaceNonInl()
 #else
 #define gDLL GC.getDLLIFace()

@@ -14,6 +14,25 @@
 
 #include <cmath> // before Python.h: Python 2.7's pyconfig.h #defines hypot
 
+#include <pybind11/cast.h>
+
+namespace pybind11::detail
+{
+	// std::string and char strings reach Python 2 as str (bytes), as with Boost.Python, not
+	// as pybind11's unicode: scripts pickle them (CyGame.getScriptData) and compare them with
+	// str literals. (Declared before anything instantiates the caster; char* casts go
+	// through it.) Wide strings stay unicode.
+	template <>
+	struct type_caster<std::string> : string_caster<std::string>
+	{
+		using string_caster<std::string>::cast;
+		static handle cast(const std::string& src, return_value_policy, handle)
+		{
+			return PyString_FromStringAndSize(src.data(), static_cast<Py_ssize_t>(src.size()));
+		}
+	};
+}
+
 #include <pybind11/pybind11.h>
 
 #include <string>
