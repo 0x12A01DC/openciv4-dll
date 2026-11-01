@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a problem or ask a question in the openciv4 repository
+    url: https://github.com/bssth/openciv4/issues
+    about: Issues about this DLL, porting a mod or the engine are all tracked there (mention openciv4-dll in the title).

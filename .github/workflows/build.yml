@@ -1,0 +1,81 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Python 2.7 and pybind11
+        id: deps
+        uses: actions/cache@v4
+        with:
+          path: external
+          key: deps-python-2.7.18-pybind11-2.9.2
+
+      - name: Fetch Python 2.7 and pybind11
+        if: steps.deps.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force external | Out-Null
+          Invoke-WebRequest https://www.python.org/ftp/python/2.7.18/python-2.7.18.amd64.msi -OutFile external\python.msi
+          Start-Process msiexec.exe -Wait -ArgumentList '/a', "`"$PWD\external\python.msi`"", '/qn', "TARGETDIR=`"$PWD\external\python27`""
+          Remove-Item external\python.msi
+          if (-not (Test-Path external\python27\libs\python27.lib)) { throw "Python 2.7 did not unpack" }
+          Invoke-WebRequest https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.zip -OutFile external\pybind11.zip
+          Expand-Archive external\pybind11.zip external
+          Remove-Item external\pybind11.zip
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item build\bin\CvGameCoreDLL.dll, build\bin\CvGameCoreDLL.pdb, README.md dist\
+          $zip = "openciv4-dll-$($env:GITHUB_REF_NAME -replace '[\\/]', '-').zip"
+          Compress-Archive dist\* $zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CvGameCoreDLL-x64
+          path: dist/
+
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: release-zip
+          path: openciv4-dll-*.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: openciv4-dll-*.zip
+          generate_release_notes: true

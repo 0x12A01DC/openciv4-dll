@@ -1,4 +1,25 @@
 # x64 build of the Civ4 BtS SDK game core (CvGameCoreDLL) against Python 2.7 + pybind11.
+# Part of openciv4 (add_subdirectory), or a project of its own that builds the vanilla core and
+# optionally a mod's (OC4_MOD_SOURCE_DIR), see README.md.
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+	cmake_minimum_required(VERSION 3.28)
+	project(openciv4-dll LANGUAGES C CXX)
+	if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+		message(FATAL_ERROR "openciv4-dll is x64-only")
+	endif()
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo,Release>:ProgramDatabase>")
+	add_link_options($<$<CONFIG:Release>:/DEBUG:FULL> $<$<CONFIG:Release>:/OPT:REF> $<$<CONFIG:Release>:/OPT:ICF>)
+	option(OC4_LTO "Link-time code generation for optimised builds" ON)
+	if(OC4_LTO)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
+	endif()
+	set(OC4_GAMECORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+	include(GameCore.cmake)
+	set(OC4_STANDALONE ON)
+endif()
 
 set(OC4_PYTHON27_DIR "${PROJECT_SOURCE_DIR}/external/python27" CACHE PATH "Python 2.7 x64 (include/, libs/python27.lib, python27.dll)")
 set(OC4_PYBIND11_DIR "${PROJECT_SOURCE_DIR}/external/pybind11-2.9.2" CACHE PATH "pybind11 2.9.x, the last series supporting Python 2.7")
@@ -37,5 +58,21 @@ if(MSVC AND NOT OC4_PGO STREQUAL "OFF")
 		set_property(TARGET CvGameCoreDLL APPEND PROPERTY LINK_DEPENDS "${OC4_PGO_PGD}")
 	else()
 		message(FATAL_ERROR "OC4_PGO must be OFF, GEN or USE")
+	endif()
+endif()
+
+# A mod's game core next to the vanilla one, into build/<dir>/mod/CvGameCoreDLL.dll.
+if(OC4_STANDALONE)
+	set(OC4_MOD_SOURCE_DIR "" CACHE PATH "A mod's CvGameCoreDLL sources to build for x64 too")
+	set(OC4_MOD_DEFINITIONS "" CACHE STRING "Its preprocessor definitions (its Makefile's /D flags), ;-separated")
+	set(OC4_MOD_DEF_FILE "" CACHE FILEPATH "Its module-definition file in x64 mangling, if it has a .def")
+	set(OC4_MOD_EXCLUDE "CvTextScreens.cpp" CACHE STRING "Its .cpp files that are not part of its project, ;-separated")
+	if(OC4_MOD_SOURCE_DIR)
+		set(def_args)
+		if(OC4_MOD_DEF_FILE)
+			set(def_args DEF_FILE "${OC4_MOD_DEF_FILE}")
+		endif()
+		oc4_add_game_core(CvGameCoreDLL_mod SOURCE_DIR "${OC4_MOD_SOURCE_DIR}" EXCLUDE ${OC4_MOD_EXCLUDE}
+			DEFINITIONS ${OC4_MOD_DEFINITIONS} ${def_args} OUTPUT_DIR "${CMAKE_BINARY_DIR}/mod")
 	endif()
 endif()

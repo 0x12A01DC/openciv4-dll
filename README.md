@@ -1,60 +1,97 @@
-# gamecore
+# openciv4-dll
 
-`CvGameCoreDLL/` is the Civilization IV: Beyond the Sword 3.19 SDK source (the game DLL
-Firaxis released for modding), imported unmodified in the first commit that adds it and
-then ported to x64 / modern MSVC / Python 2.7 for openciv4. It remains under Firaxis'
-SDK terms; see the game's SDK documentation.
+The game DLL of *Civilization IV: Beyond the Sword* (`CvGameCoreDLL`, the 3.19 SDK Firaxis
+released for modding) ported to **x64**, current MSVC and Python 2.7 x64, for
+[openciv4](https://github.com/bssth/openciv4), an experimental x64 engine for the game.
 
-`compat/` holds what replaces the SDK's bundled third-party code:
+It is also the base for porting a mod's own DLL: the compatibility layer here lets a mod's
+sources build for x64 with a small set of changes, and the documents below explain those
+changes step by step.
 
-* `compat/boost/python*.hpp`: the subset of Boost.Python 1.32 used by the SDK (`class_`,
-  `bases`, `def`, `enum_`, return value policies, `tuple`/`list`), implemented on pybind11,
-  so the `Cy*Interface*.cpp` binding files and mod DLLs compile unchanged.
-* `compat/hash_map`: `stdext::hash_map` behaving like the VC7.1 one the original DLL was
-  built with (linear hashing, `key ^ 0xDEADBEEF`, keys ascending within a bucket), so maps
-  iterate in the original order: `CvPlayer::doEvents` expires events in that order, and
-  saves list maps in it. Reconstructed from original saves and checked against them by
-  `tests/hash_map_test.cpp`; a BtS save loaded and saved again comes out byte-identical
-  apart from what the DLL itself changes on load (session counter, reload replay message).
+> **Issues go to the main repository:** <https://github.com/bssth/openciv4/issues>.
+> Problems with this DLL, with porting a mod, or with the engine are all tracked there
+> (mention `openciv4-dll` in the title). Issues are not tracked in this repository.
 
-Boost.Python behaviours the SDK depends on and the compat layer reproduces: enums are
-`int` subclasses with `names`/`values` (picklable as ints), `make_tuple` copies the
-object behind a raw pointer (`CyPlayer::firstCity` deletes it right after), and
-`std::string`/`char*` results are Python 2 `str` (pybind11 would make them `unicode`;
-scripts unpickle `getScriptData()` and compare types with `str` literals).
+## What is here
 
-Porting notes (what differs from the original DLL):
+| Path | What it is |
+|---|---|
+| `CvGameCoreDLL/` | The SDK sources, imported unmodified in the first commit, then ported (each change is marked `openciv4`) |
+| `compat/` | What replaces the SDK's bundled third-party code: the Boost.Python 1.32 subset the SDK uses, implemented on pybind11; Boost.Bind/Function/SmartPtr/Thread on the standard library; a `stdext::hash_map` that iterates in the VC7.1 order |
+| `GameCore.cmake` | `oc4_add_game_core()`: builds the SDK core or a mod's derivative of it as an x64 `CvGameCoreDLL.dll` |
+| `CMakeLists.txt` | The vanilla core, and optionally a mod's core (`OC4_MOD_SOURCE_DIR`) when built on its own |
+| `tools/check-exports.ps1` | Checks that a DLL exports everything the engine imports from it |
+| `docs/` | The documentation (below) |
 
-* String-keyed `stdext::hash_map`s (info and type lookups) hash with FNV-1a instead of
-  VC7.1's string hash; the game never iterates them, so only lookup speed differs.
-* Floating point is SSE2 (x64) instead of x87, so float-based AI evaluations can round
-  differently from the original 32-bit DLL.
-* The DLL tests some Python callback results without initialising them (event trigger
-  checks such as `PythonCanDoCity` read `lResult` after callbacks that may return
-  `None`); the engine must always write the result. The host converts like
-  `PyInt_AsLong`, so `None` gives -1 (true), as the original evidently does.
+## Documentation
 
-* `gDLL` in code the engine compiles from these headers (the interfaces' inline helpers such
-  as `CvDLLFeatureIFaceBase::destroy`) goes through the exported `getDLLIFaceNonInl()`, as
-  in the original EXE, instead of the inline accessor the DLL uses: mods change `CvGlobals`
-  (AND2's is an 8-byte proxy), and the engine must not depend on its layout. The engine
-  otherwise only inlines `CvInitCore`'s accessors, whose fields mods keep in place.
+* [Porting a mod's DLL to openciv4](docs/PORTING.md): the full walkthrough, from the mod's
+  sources to a game that plays and saves, with the typical changes and examples.
+* [What the engine expects of a DLL](docs/ENGINE-CONTRACT.md): exports, data layouts, the
+  process the DLL runs in, the Python side.
+* [Troubleshooting](docs/TROUBLESHOOTING.md): symptoms and their usual causes.
+* [Porting with an AI assistant](docs/AI-PROMPT.md): a prompt to give a coding agent, and how
+  to check its work.
+* [Notes on the SDK port](docs/SDK-PORT.md): what was changed in the SDK and why, the compat
+  layer's details, the speed changes.
 
-* `CvUnitInfo::get{Early,Middle,Late}ArtDefineTag` and `getUnitNames` returned a pointer into
-  a temporary (`cond ? m_paszTags[i] : NULL` makes a `CvString` copy); the original works as
-  long as nothing overwrites the stack in between. Fixed with `.c_str()`.
+## Building
 
-Changes for speed (game results unchanged: identical per-turn sync checksums, also across
-save and load):
+Requirements: Windows x64, Visual Studio 2022 or newer with **Desktop development with C++**
+(CMake and Ninja come with it), and two third-party packages:
 
-* Built with link-time code generation (`OC4_LTO`, on by default): the AI spends much of a
-  turn in small accessors defined in other files. About -40% turn time on its own.
-* Optionally profile-guided (`OC4_PGO`, driven by `tools\pgo.cmd`): another 5-10% on
-  late-game turns, measured on maps and seeds other than the training games.
-* `pathValid` tests the danger of the node being expanded once per path search instead of
-  once per neighbour (`g_iPathSearch`, `CvPlayerAI::AI_isPlotDangerous`, which also stops
-  at the first danger found).
-* `CvGame::countCivTeamsEverAlive` counts with a flag array instead of building a
-  `std::set` on every call.
-* `stdext::hash_map<std::string, ...>::find(const char*)` does not build a `std::string`
-  (`CvGlobals::getDefineINT`, `getInfoTypeForString`).
+* Python 2.7.18 x64 from python.org, extracted without installing:
+  `msiexec /a python-2.7.18.amd64.msi /qn TARGETDIR=%CD%\external\python27`
+* pybind11 2.9.2 (the last series that supports Python 2.7), its release source archive
+  unpacked to `external\pybind11-2.9.2`
+
+From an **x64 Native Tools Command Prompt**:
+
+```bat
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+
+The DLL is `build\bin\CvGameCoreDLL.dll` (with its `.pdb`). Other locations of the packages:
+`-DOC4_PYTHON27_DIR=...` and `-DOC4_PYBIND11_DIR=...`. Link-time code generation is on by
+default (`-DOC4_LTO=OFF` to turn it off, for faster links while porting).
+
+A mod's DLL is built the same way, next to the vanilla one, into `build\mod\CvGameCoreDLL.dll`:
+
+```bat
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release ^
+    -DOC4_MOD_SOURCE_DIR=D:/MyMod/CvGameCoreDLL ^
+    "-DOC4_MOD_DEFINITIONS=MY_FLAG;OTHER_FLAG" ^
+    -DOC4_MOD_DEF_FILE=D:/MyMod/CvGameCoreDLL/CvGameCoreDLL64.def
+cmake --build build
+```
+
+See [docs/PORTING.md](docs/PORTING.md) for what the options mean and what to change in the
+mod's sources first.
+
+Inside openciv4 this repository is the `gamecore` submodule; the engine's build includes it
+and compiles itself against these headers.
+
+## Downloads
+
+Every push builds the DLL on GitHub Actions; the DLL and its `.pdb` are attached to the run
+as the `CvGameCoreDLL-x64` artifact. Tags named `v*` are published as releases with a zip of
+the same files.
+
+## Status and differences from the original DLL
+
+The vanilla core loads all of the game's XML, starts and plays games (AI autoplay is
+deterministic per seed), and saves and loads `.CivBeyondSwordSave` files in the original
+format, including saves made by the original game. Differences that matter to modders:
+
+* Floating point is SSE2 instead of x87: float-based AI evaluations can round differently, so
+  a game does not replay exactly as it would in the 32-bit DLL.
+* A few bugs the 32-bit DLL survived by luck are fixed (pointers into temporaries, a wrong
+  Python binding); see [docs/SDK-PORT.md](docs/SDK-PORT.md).
+* A few hot paths are faster with identical game results.
+
+## License
+
+`CvGameCoreDLL/` is Firaxis' SDK source and remains under the SDK's terms (see the game's SDK
+documentation); a mod built from it is under the same terms plus the mod's own. `compat/`, the
+build files, the tools and the documentation are openciv4's.
