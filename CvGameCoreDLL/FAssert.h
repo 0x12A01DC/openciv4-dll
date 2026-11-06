@@ -6,7 +6,8 @@
 // Only compile in FAssert's if FASSERT_ENABLE is defined.  By default, however, let's key off of
 // _DEBUG.  Sometimes, however, it's useful to enable asserts in release builds, and you can do that
 // simply by changing the following lines to define FASSERT_ENABLE or using project settings to override
-#ifdef _DEBUG
+// openciv4: FAssertDlg lives in the game core and isn't exported, so the engine builds without asserts.
+#if defined _DEBUG && !defined OC4_GAMECORE_IMPORT
 #define FASSERT_ENABLE
 #endif 
 

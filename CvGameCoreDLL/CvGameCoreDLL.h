@@ -16,7 +16,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <MMSystem.h>
-#if defined _DEBUG && !defined USE_MEMMANAGER
+// openciv4: the engine (OC4_GAMECORE_IMPORT) has no debug operator new, and the macros break its std::malloc.
+#if defined _DEBUG && !defined USE_MEMMANAGER && !defined OC4_GAMECORE_IMPORT
 #define USE_MEMMANAGER
 #include <crtdbg.h>
 #endif
