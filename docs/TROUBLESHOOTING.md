@@ -23,9 +23,9 @@ engine's log and what you ran: <https://github.com/bssth/openciv4/issues>.
 
 | Symptom | Usual cause |
 |---|---|
-| "The procedure entry point ... could not be located" | the DLL does not export a name the engine imports: `tools/check-exports.ps1` (section 5) |
-| "is not a valid Win32 application" | the mod's 32-bit DLL next to the engine: use your x64 build |
-| crash or XML errors at `LoadPreMenuGlobals` without `--mod` | an engine folder whose DLL is a mod's, started without its mod: the DLL reads the base game's XML |
+| "does not export what the engine uses" | the DLL lacks names the engine imports: `tools/check-exports.ps1` (section 5) |
+| "cannot load the game core ... (error 193)" | a 32-bit DLL named `CvGameCoreDLL-x64.dll`: use your x64 build |
+| XML errors at an early stage with a mod that has its own DLL | no `CvGameCoreDLL-x64.dll` in the mod's `Assets`: the vanilla DLL reads the mod's XML |
 | `FAILED` at an early XML stage | the DLL does not find its files: the `--mod` path, or the mod expects to be in `Mods\` under its exact folder name |
 | "more siblings than memory allocated", types not found | the XML belongs to another version of the mod than the sources |
 | a crash in an info class's `read` | an XML list longer than the fixed array it is read into (section 6) |

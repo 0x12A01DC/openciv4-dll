@@ -2,12 +2,20 @@
 #                   [DEF_FILE <file>] [OUTPUT_DIR <dir>] [PUBLIC_HEADERS])
 #
 # Builds a Civ4 BtS game core (the SDK's CvGameCoreDLL or a mod's derivative of it) for x64
-# against Python 2.7 and the compat layer, as a DLL named CvGameCoreDLL.dll. PUBLIC_HEADERS
+# against Python 2.7 and the compat layer, as a DLL named CvGameCoreDLL-<arch>.dll (OC4_GAME_CORE_NAME,
+# so that a mod ships it beside its 32-bit CvGameCoreDLL.dll in one Assets folder). PUBLIC_HEADERS
 # exposes its include directories to dependants (the host is compiled against the vanilla
 # SDK headers). DEF_FILE is a module-definition file in x64 mangling, for mods that export
 # the engine's names under other functions (a mod's own .def is 32-bit). With OUTPUT_DIR the
 # DLL lands there instead of the common bin folder, and oc4core.exe is copied next to it so
 # that it runs with that game core.
+if(CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "^(ARM64|aarch64)$" OR CMAKE_SYSTEM_PROCESSOR MATCHES "^(ARM64|arm64|aarch64)$")
+	set(OC4_ARCH arm64)
+else()
+	set(OC4_ARCH x64)
+endif()
+set(OC4_GAME_CORE_NAME "CvGameCoreDLL-${OC4_ARCH}")
+
 function(oc4_add_game_core target)
 	cmake_parse_arguments(ARG "PUBLIC_HEADERS" "SOURCE_DIR;OUTPUT_DIR;DEF_FILE" "EXCLUDE;DEFINITIONS" ${ARGN})
 	get_filename_component(src "${ARG_SOURCE_DIR}" ABSOLUTE)
@@ -32,7 +40,7 @@ function(oc4_add_game_core target)
 		PUBLIC WIN32 _WINDOWS
 		PRIVATE _USRDLL CVGAMECOREDLL_EXPORTS _CRT_SECURE_NO_WARNINGS _CRT_NON_CONFORMING_SWPRINTFS _SCL_SECURE_NO_WARNINGS
 			$<$<NOT:$<CONFIG:Debug>>:NDEBUG FINAL_RELEASE> ${ARG_DEFINITIONS})
-	set_target_properties(${target} PROPERTIES CXX_STANDARD 20 CXX_SCAN_FOR_MODULES OFF FOLDER "gamecore" OUTPUT_NAME CvGameCoreDLL)
+	set_target_properties(${target} PROPERTIES CXX_STANDARD 20 CXX_SCAN_FOR_MODULES OFF FOLDER "gamecore" OUTPUT_NAME ${OC4_GAME_CORE_NAME})
 	if(MSVC)
 		# SDK code is VC7.1-era: lenient conformance, its own code page, quiet legacy warnings.
 		target_compile_options(${target} PRIVATE /permissive /Zc:forScope- /W3 /EHsc /bigobj /MP

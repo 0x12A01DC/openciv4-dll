@@ -11,7 +11,10 @@ Questions and reports: <https://github.com/bssth/openciv4/issues>.
 
 ## The interface
 
-**Exports.** The engine imports about 450 functions from `CvGameCoreDLL.dll` by their x64
+**Loading.** The engine loads the mod's `Assets\CvGameCoreDLL-x64.dll`, else the one next to
+its own exe, before it calls into it, and stops with the names of any imports the DLL lacks.
+
+**Exports.** The engine imports about 450 functions from the game core by their x64
 mangled names: the SDK's `DllExport` functions it uses, plus a few the original engine did
 not use but openciv4 does (help texts for plots and units, for example). Each must exist with
 the SDK's signature, under the SDK's name (directly or through a `.def` alias).

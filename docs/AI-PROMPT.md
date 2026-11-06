@@ -42,9 +42,9 @@ Context:
   cmake -S <openciv4-dll> -B <build dir> -G Ninja -DCMAKE_BUILD_TYPE=Release -DOC4_LTO=OFF
     -DOC4_MOD_SOURCE_DIR=<sources> "-DOC4_MOD_DEFINITIONS=<defines>" [-DOC4_MOD_DEF_FILE=<def>]
   cmake --build <build dir> --target CvGameCoreDLL_mod -- -k 0
-- The engine: <engine folder>\oc4core.exe. Make a copy of that folder for the port and put
-  the built <build dir>\mod\CvGameCoreDLL.dll (and its .pdb) in the copy. The mod's content
-  is at <mod folder>; run the engine with --mod "<mod folder>".
+- The engine: <engine folder>\oc4core.exe. The mod's content is at <mod folder>; put the built
+  <build dir>\mod\CvGameCoreDLL-x64.dll (and its .pdb) into <mod folder>\Assets and run the
+  engine with --mod "<mod folder>".
 - The game install at <Civ4 folder> is read-only for you. Do not modify the engine or
   openciv4-dll to make the mod work; if something there seems wrong, stop and report it.
 
@@ -67,7 +67,7 @@ Steps, each with its check:
    size_t/time_t/pointers written to saves, sizeof-based layout code, inline asm, memcpy over
    object ranges. List what you found and changed. Check: the list, with file and line.
 3. Exports (section 5): run
-   <openciv4-dll>\tools\check-exports.ps1 -Exe <engine copy>\oc4core.exe -Dll <the DLL>.
+   <openciv4-dll>\tools\check-exports.ps1 -Exe <engine folder>\oc4core.exe -Dll <the DLL>.
    Check: 0 missing.
 4. XML (section 6): run oc4core.exe --mod "<mod folder>". Check: every stage ok, no
    message boxes in the output (or each explained).

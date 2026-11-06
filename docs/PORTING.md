@@ -2,8 +2,10 @@
 
 openciv4 is a 64-bit engine, so it cannot load the 32-bit `CvGameCoreDLL.dll` a mod ships
 in its `Assets` folder. A mod that has its own DLL needs that DLL rebuilt for x64 from its
-sources. Mods without a DLL of their own (XML, Python and art only) need nothing from this
-guide: they run on the vanilla core as they are.
+sources, as `CvGameCoreDLL-x64.dll` beside the 32-bit one: the original game keeps loading
+its DLL and openciv4 loads the other, so one copy of the mod serves both. Mods without a DLL
+of their own (XML, Python and art only) need nothing from this guide: they run on the
+vanilla core as they are.
 
 The work, in order:
 
@@ -33,12 +35,11 @@ You need:
 
 * **Civilization IV: Beyond the Sword 3.19** installed (Steam, GOG or disc). openciv4 reads
   the game's files from the install and writes nothing into it.
-* **An openciv4 engine folder**: `oc4core.exe` with `CvGameCoreDLL.dll`, `python27.dll`, the
+* **An openciv4 engine folder**: `oc4core.exe` with `CvGameCoreDLL-x64.dll`, `python27.dll`, the
   `python` folder and the runtime DLLs next to it, from the
   [releases](https://github.com/bssth/openciv4/releases) or built from the openciv4 sources.
-  The engine loads the `CvGameCoreDLL.dll` **next to its own exe**, never the one in the mod's
-  `Assets` folder. A ported mod therefore gets its own copy of the engine folder with its DLL
-  in it.
+  The engine loads the mod's `Assets\CvGameCoreDLL-x64.dll`, or the vanilla one next to its
+  own exe when the mod has none. One engine folder runs every mod.
 * **The mod's DLL sources, matching the mod's XML and Python.** A DLL reads the XML schema it
   was written for; sources from another version of the mod load its XML partly or not at all.
   If the mod's author shares the sources but does not publish them, keep your port private
@@ -258,12 +259,12 @@ the engine's import is a silent bug (the engine calls a function with other para
 Then check the result against the engine:
 
 ```powershell
-tools\check-exports.ps1 -Exe <engine folder>\oc4core.exe -Dll build\mod\CvGameCoreDLL.dll
+tools\check-exports.ps1 -Exe <engine folder>\oc4core.exe -Dll build\mod\CvGameCoreDLL-x64.dll
 ```
 
 It lists every name `oc4core.exe` imports from the DLL that the DLL does not export, with
-its declaration. Windows refuses to start the engine with a DLL missing any of them ("the
-procedure entry point ... could not be located"). Usual reasons:
+its declaration. The engine refuses to start with a DLL missing any of them ("does not export
+what the engine uses", with the names). Usual reasons:
 
 * the mod removed `DllExport` from a function the original engine did not use but openciv4
   does (plot and unit help texts, for example): export it again, or add a `.def` line;
@@ -276,8 +277,8 @@ every mod has to provide it.
 
 ## 6. First run: the XML
 
-Copy the engine folder, put the mod's new DLL in it in place of the vanilla one, and start it
-headless with the mod:
+Put the new `CvGameCoreDLL-x64.dll` (and its `.pdb`) into the mod's `Assets` folder and start
+the engine headless with the mod:
 
 ```bat
 oc4core.exe --mod "Mods\MyMod" --log-dir D:\logs
@@ -391,20 +392,14 @@ oc4core.exe --mod "Mods\MyMod" --menu
 ```
 
 opens the main menu (new game, load, mods); `--play --load <save>` continues a game
-directly. Started from the menu once, the engine remembers which of its copies runs which mod
-(`Documents\My Games\openciv4\mods.txt`), so a save of the mod loads in the right engine from
-any other, and the menu's *Load a Mod* switches between them.
+directly. Started from the menu once, the engine remembers the mod
+(`Documents\My Games\openciv4\mods.txt`), so a save of the mod loads with it, and the menu's
+*Load a Mod* switches between mods.
 
-To give the port to players, ship the engine folder with your DLL and a batch file that
-starts it with the mod:
-
-```bat
-@echo off
-"%~dp0oc4core.exe" --mod "Mods\MyMod" --menu > "%~dp0openciv4.log" 2>&1
-```
-
-with a note on where the mod must be installed (or `--mod "%~1"` to take its folder by drag
-and drop). Respect the mod's license and its author's wishes about the sources and the DLL.
+To give the port to players, ship `CvGameCoreDLL-x64.dll` in the mod's `Assets` folder, next to
+its 32-bit DLL; players start the engine with `--mod` (the engine's `Play Mod.bat` takes the
+mod's folder by drag and drop). Respect the mod's license and its author's wishes about the
+sources and the DLL.
 
 ## 11. Keeping up with the mod's updates
 

@@ -1,6 +1,6 @@
-# Lists what oc4core.exe imports from CvGameCoreDLL.dll that a game core does not export.
-# The engine resolves these names when it starts; one missing name and Windows refuses to load it.
-#   tools\check-exports.ps1 -Exe <engine folder>\oc4core.exe -Dll <build>\mod\CvGameCoreDLL.dll
+# Lists what oc4core.exe imports from the game core (CvGameCoreDLL-x64.dll) that a game core does not export.
+# The engine resolves these names when it loads the game core and stops if one is missing.
+#   tools\check-exports.ps1 -Exe <engine folder>\oc4core.exe -Dll <build>\mod\CvGameCoreDLL-x64.dll
 param(
 	[Parameter(Mandatory = $true)][string]$Exe,
 	[Parameter(Mandatory = $true)][string]$Dll
@@ -18,10 +18,10 @@ if (-not $dumpbin) { throw "dumpbin.exe not found: run from a Visual Studio x64 
 $imports = New-Object System.Collections.Generic.List[string]
 $inGameCore = $false
 foreach ($line in & $dumpbin /nologo /imports $Exe) {
-	if ($line -match '^\s{4}(\S+\.dll)\s*$') { $inGameCore = $Matches[1] -ieq "CvGameCoreDLL.dll"; continue }
-	if ($inGameCore -and $line -match '^\s+[0-9A-Fa-f]+\s+(\S+)\s*$') { $imports.Add($Matches[1]) }
+	if ($line -match '^\s{4}(\S+\.dll)\s*$') { $inGameCore = $Matches[1] -match '^CvGameCoreDLL(-\w+)?\.dll$'; continue }
+	if ($inGameCore -and $line -match '^\s+[0-9A-Fa-f]{16}\s+[0-9A-Fa-f]+\s+(\S+)\s*$') { $imports.Add($Matches[1]) }
 }
-if ($imports.Count -eq 0) { throw "$Exe imports nothing from CvGameCoreDLL.dll" }
+if ($imports.Count -eq 0) { throw "$Exe imports nothing from a game core" }
 
 $exports = New-Object System.Collections.Generic.HashSet[string]
 foreach ($line in & $dumpbin /nologo /exports $Dll) {

@@ -18,7 +18,7 @@ changes step by step.
 |---|---|
 | `CvGameCoreDLL/` | The SDK sources, imported unmodified in the first commit, then ported (each change is marked `openciv4`) |
 | `compat/` | What replaces the SDK's bundled third-party code: the Boost.Python 1.32 subset the SDK uses, implemented on pybind11; Boost.Bind/Function/SmartPtr/Thread on the standard library; a `stdext::hash_map` that iterates in the VC7.1 order |
-| `GameCore.cmake` | `oc4_add_game_core()`: builds the SDK core or a mod's derivative of it as an x64 `CvGameCoreDLL.dll` |
+| `GameCore.cmake` | `oc4_add_game_core()`: builds the SDK core or a mod's derivative of it as `CvGameCoreDLL-x64.dll` |
 | `CMakeLists.txt` | The vanilla core, and optionally a mod's core (`OC4_MOD_SOURCE_DIR`) when built on its own |
 | `tools/check-exports.ps1` | Checks that a DLL exports everything the engine imports from it |
 | `docs/` | The documentation (below) |
@@ -52,11 +52,12 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
-The DLL is `build\bin\CvGameCoreDLL.dll` (with its `.pdb`). Other locations of the packages:
+The DLL is `build\bin\CvGameCoreDLL-x64.dll` (with its `.pdb`). Other locations of the packages:
 `-DOC4_PYTHON27_DIR=...` and `-DOC4_PYBIND11_DIR=...`. Link-time code generation is on by
 default (`-DOC4_LTO=OFF` to turn it off, for faster links while porting).
 
-A mod's DLL is built the same way, next to the vanilla one, into `build\mod\CvGameCoreDLL.dll`:
+A mod's DLL is built the same way, next to the vanilla one, into `build\mod\CvGameCoreDLL-x64.dll`,
+which goes into the mod's `Assets` folder beside its 32-bit `CvGameCoreDLL.dll`:
 
 ```bat
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release ^
@@ -94,4 +95,4 @@ format, including saves made by the original game. Differences that matter to mo
 
 `CvGameCoreDLL/` is Firaxis' SDK source and remains under the SDK's terms (see the game's SDK
 documentation); a mod built from it is under the same terms plus the mod's own. `compat/`, the
-build files, the tools and the documentation are openciv4's.
+build files, the tools and the documentation are under the MIT License ([LICENSE](LICENSE)).
