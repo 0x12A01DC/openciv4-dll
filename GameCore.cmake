@@ -43,7 +43,7 @@ function(oc4_add_game_core target)
 	set_target_properties(${target} PROPERTIES CXX_STANDARD 20 CXX_SCAN_FOR_MODULES OFF FOLDER "gamecore" OUTPUT_NAME ${OC4_GAME_CORE_NAME})
 	if(MSVC)
 		# SDK code is VC7.1-era: lenient conformance, its own code page, quiet legacy warnings.
-		target_compile_options(${target} PRIVATE /permissive /Zc:forScope- /W3 /EHsc /bigobj /MP
+		target_compile_options(${target} PRIVATE /permissive /W3 /EHsc /bigobj /MP
 			/source-charset:windows-1252 /execution-charset:windows-1252
 			/wd4244 /wd4267 /wd4305 /wd4800 /wd4996 /wd4251 /wd4018 /wd4805 /wd4838)
 	endif()
