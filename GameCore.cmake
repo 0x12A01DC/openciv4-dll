@@ -35,9 +35,16 @@ function(oc4_add_game_core target)
 	else()
 		target_include_directories(${target} PRIVATE "${src}" "${compat}")
 	endif()
-	target_link_libraries(${target} PUBLIC oc4_python27 PRIVATE winmm user32 psapi)
+	if(WIN32)
+		target_link_libraries(${target} PUBLIC oc4_python27 PRIVATE winmm user32 psapi)
+	else()
+		target_link_libraries(${target} PUBLIC oc4_python27)
+		target_include_directories(${target} PUBLIC "${compat}/posix")
+		target_sources(${target} PRIVATE "${compat}/posix/oc4_posix.cpp")
+		set_source_files_properties("${compat}/posix/oc4_posix.cpp" TARGET_DIRECTORY ${target} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+	endif()
 	target_compile_definitions(${target}
-		PUBLIC WIN32 _WINDOWS
+		PUBLIC $<$<PLATFORM_ID:Windows>:WIN32> $<$<PLATFORM_ID:Windows>:_WINDOWS>
 		PRIVATE _USRDLL CVGAMECOREDLL_EXPORTS _CRT_SECURE_NO_WARNINGS _CRT_NON_CONFORMING_SWPRINTFS _SCL_SECURE_NO_WARNINGS
 			$<$<NOT:$<CONFIG:Debug>>:NDEBUG FINAL_RELEASE> ${ARG_DEFINITIONS})
 	set_target_properties(${target} PROPERTIES CXX_STANDARD 20 CXX_SCAN_FOR_MODULES OFF FOLDER "gamecore" OUTPUT_NAME ${OC4_GAME_CORE_NAME})
@@ -46,6 +53,11 @@ function(oc4_add_game_core target)
 		target_compile_options(${target} PRIVATE /permissive /Zc:forScope- /W3 /EHsc /bigobj /MP
 			/source-charset:windows-1252 /execution-charset:windows-1252
 			/wd4244 /wd4267 /wd4305 /wd4800 /wd4996 /wd4251 /wd4018 /wd4805 /wd4838)
+	endif()
+	if(NOT MSVC)
+		# VC7.1-era code: Microsoft extensions, and the SDK's Windows-1252 sources as raw bytes.
+		# Non-POD varargs stays an error: clang compiles it to a trap (brk), not MSVC's silent pass-through.
+		target_compile_options(${target} PRIVATE -fms-extensions -ferror-limit=0 -Wno-everything -ffp-contract=off -Werror=non-pod-varargs)
 	endif()
 	target_precompile_headers(${target} PRIVATE "${src}/CvGameCoreDLL.h")
 	set_source_files_properties("${compat}/oc4_boost_python.cpp" TARGET_DIRECTORY ${target} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)

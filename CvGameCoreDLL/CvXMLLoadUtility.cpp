@@ -26,7 +26,10 @@ static const int kBufSize = 2048;
 void CvXMLLoadUtility::logMsg(char* format, ... )
 {
 	static char buf[kBufSize];
-	_vsnprintf( buf, kBufSize-4, format, (char*)(&format+1) );
+	va_list args;	// openciv4: not x86's stack layout
+	va_start(args, format);
+	_vsnprintf( buf, kBufSize-4, format, args );
+	va_end(args);
 	gDLL->logMsg("xml.log", buf);
 }
 
@@ -115,7 +118,7 @@ void CvXMLLoadUtility::ResetGlobalEffectInfo()
 
 	GC.getEffectInfo().clear();
 
-	LoadGlobalClassInfo(GC.getEffectInfo(), "CIV4EffectInfos", "Misc", "Civ4EffectInfos/EffectInfos/EffectInfo", false, false);
+	LoadGlobalClassInfo(GC.getEffectInfo(), "CIV4EffectInfos", "Misc", "Civ4EffectInfos/EffectInfos/EffectInfo", false, NULL);
 }
 
 

@@ -71,7 +71,7 @@ void CyUnit::doCommand(CommandTypes eCommand, int iData1, int iData2)
 
 CyPlot* CyUnit::getPathEndTurnPlot()
 {
-	return m_pUnit ? new CyPlot(m_pUnit->getPathEndTurnPlot()) : false;
+	return m_pUnit ? new CyPlot(m_pUnit->getPathEndTurnPlot()) : NULL;
 }
 
 bool CyUnit::generatePath(CyPlot* pToPlot, int iFlags, bool bReuse, int* piPathTurns)
@@ -246,7 +246,7 @@ bool CyUnit::canAirBombAt(CyPlot* pPlot, int iX, int iY)
 
 CyCity* CyUnit::bombardTarget(CyPlot* pPlot)
 {
-	return m_pUnit ? new CyCity(m_pUnit->bombardTarget(pPlot->getPlot())) : false;
+	return m_pUnit ? new CyCity(m_pUnit->bombardTarget(pPlot->getPlot())) : NULL;
 }
 
 bool CyUnit::canBombard(CyPlot* pPlot)
@@ -770,7 +770,7 @@ int CyUnit::airCombatDamage(CyUnit* pDefender)
 
 CyUnit* CyUnit::bestInterceptor(CyPlot* pPlot)
 {
-	return m_pUnit ? new CyUnit(m_pUnit->bestInterceptor(pPlot->getPlot())) : false;
+	return m_pUnit ? new CyUnit(m_pUnit->bestInterceptor(pPlot->getPlot())) : NULL;
 }
 
 bool CyUnit::isAutomated()

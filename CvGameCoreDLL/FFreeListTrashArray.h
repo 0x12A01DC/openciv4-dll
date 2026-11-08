@@ -31,6 +31,16 @@
 template <class T>
 class FFreeListTrashArray : public FFreeListArrayBase<T>
 {
+	// openciv4: names from the dependent base, which VC7.1 found on its own
+	using FFreeListArrayBase<T>::m_iFreeListHead;
+	using FFreeListArrayBase<T>::m_iFreeListCount;
+	using FFreeListArrayBase<T>::m_iLastIndex;
+	using FFreeListArrayBase<T>::m_iNumSlots;
+public:
+	using FFreeListArrayBase<T>::getIndexAfterLast;
+	using FFreeListArrayBase<T>::getCount;
+protected:
+
 public:
 
 	FFreeListTrashArray();

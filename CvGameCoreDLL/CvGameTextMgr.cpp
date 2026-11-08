@@ -2081,8 +2081,8 @@ bool CvGameTextMgr::setCombatPlotHelp(CvWStringBuffer &szString, CvPlot* pPlot)
 void createTestFontString(CvWStringBuffer& szString)
 {
 	int iI;
-	szString.assign(L"!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[×]^_`abcdefghijklmnopqrstuvwxyz\n");
-	szString.append(L"{}~\\ßÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ¿¡«»°ŠŒŽšœž™©®€£¢”‘“…’");
+	szString.assign(L"!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\x00D7" L"]^_`abcdefghijklmnopqrstuvwxyz\n");
+	szString.append(L"{}~\\\x00DF" L"\x00C0" L"\x00C1" L"\x00C2" L"\x00C3" L"\x00C4" L"\x00C5" L"\x00C6" L"\x00C7" L"\x00C8" L"\x00C9" L"\x00CA" L"\x00CB" L"\x00CC" L"\x00CD" L"\x00CE" L"\x00CF" L"\x00D0" L"\x00D1" L"\x00D2" L"\x00D3" L"\x00D4" L"\x00D5" L"\x00D6" L"\x00D8" L"\x00D9" L"\x00DA" L"\x00DB" L"\x00DC" L"\x00DD" L"\x00DE" L"\x0178" L"\x00DF" L"\x00E0" L"\x00E1" L"\x00E2" L"\x00E3" L"\x00E4" L"\x00E5" L"\x00E6" L"\x00E7" L"\x00E8" L"\x00E9" L"\x00EA" L"\x00EB" L"\x00EC" L"\x00ED" L"\x00EE" L"\x00EF" L"\x00F0" L"\x00F1" L"\x00F2" L"\x00F3" L"\x00F4" L"\x00F5" L"\x00F6" L"\x00F7" L"\x00F8" L"\x00F9" L"\x00FA" L"\x00FB" L"\x00FC" L"\x00FD" L"\x00FE" L"\x00FF" L"\x00BF" L"\x00A1" L"\x00AB" L"\x00BB" L"\x00B0" L"\x0160" L"\x0152" L"\x017D" L"\x0161" L"\x0153" L"\x017E" L"\x2122" L"\x00A9" L"\x00AE" L"\x20AC" L"\x00A3" L"\x00A2" L"\x201D" L"\x2018" L"\x201C" L"\x2026" L"\x2019" L"");
 	for (iI=0;iI<NUM_YIELD_TYPES;++iI)
 		szString.append(CvWString::format(L"%c", GC.getYieldInfo((YieldTypes) iI).getChar()));
 
@@ -6287,7 +6287,7 @@ void CvGameTextMgr::setUnitHelp(CvWStringBuffer &szBuffer, UnitTypes eUnit, bool
 			}
 			else
 			{
-				szTempBuffer.Format(L"%s%c", NEWLINE, gDLL->getSymbolID(BULLET_CHAR), szTempBuffer);
+				szTempBuffer.Format(L"%s%c", NEWLINE, gDLL->getSymbolID(BULLET_CHAR));
 				szBuffer.append(szTempBuffer);
 			}
 			if (GC.getUnitInfo(eUnit).getBonusProductionModifier(iI) == 100)
@@ -7453,7 +7453,7 @@ void CvGameTextMgr::setBuildingHelp(CvWStringBuffer &szBuffer, BuildingTypes eBu
 				}
 				else
 				{
-					szTempBuffer.Format(L"\n%c", gDLL->getSymbolID(BULLET_CHAR), szTempBuffer);
+					szTempBuffer.Format(L"\n%c", gDLL->getSymbolID(BULLET_CHAR));
 					szBuffer.append(szTempBuffer);
 				}
 				if (kBuilding.getBonusProductionModifier(iI) == 100)
@@ -8096,7 +8096,7 @@ void CvGameTextMgr::setProjectHelp(CvWStringBuffer &szBuffer, ProjectTypes eProj
 			}
 			else
 			{
-				szTempBuffer.Format(L"%s%c", NEWLINE, gDLL->getSymbolID(BULLET_CHAR), szTempBuffer);
+				szTempBuffer.Format(L"%s%c", NEWLINE, gDLL->getSymbolID(BULLET_CHAR));
 				szBuffer.append(szTempBuffer);
 			}
 			if (kProject.getBonusProductionModifier(iI) == 100)
@@ -14116,7 +14116,7 @@ void CvGameTextMgr::assignFontIds(int iFirstSymbolCode, int iPadAmount)
 	int iCurSymbolID = iFirstSymbolCode;
 
 	// set yield symbols
-	for (int i = 0; i < NUM_YIELD_TYPES; i++)
+	int i; for (i = 0; i < NUM_YIELD_TYPES; i++)
 	{
 		GC.getYieldInfo((YieldTypes) i).setChar(iCurSymbolID);  
 		++iCurSymbolID;
@@ -14147,7 +14147,7 @@ void CvGameTextMgr::assignFontIds(int iFirstSymbolCode, int iPadAmount)
 		} while (iCurSymbolID % iPadAmount != 0);
 	}
 
-	for (int i = 0; i < GC.getNumReligionInfos(); i++)
+	for (i = 0; i < GC.getNumReligionInfos(); i++)
 	{
 		GC.getReligionInfo((ReligionTypes) i).setChar(iCurSymbolID);
 		++iCurSymbolID;

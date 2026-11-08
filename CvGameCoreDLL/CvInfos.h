@@ -4964,6 +4964,8 @@ public:
 			return m_szVarietyButton;
 		}
 
+		int getNumFeatureArtPieces() const { return (int) m_aFeatureArtPieces.size(); }	// openciv4
+
 		const FeatureArtPiece &getFeatureArtPiece(int index) const
 		{
 			FAssertMsg((index >= 0) && (index < (int) m_aFeatureArtPieces.size()), "[Jason] Invalid feature art index.");
