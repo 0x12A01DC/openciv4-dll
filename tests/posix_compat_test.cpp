@@ -23,6 +23,7 @@ int main()
 	assert(fmt(L"[%-6s]", L"ab") == L"[ab    ]");
 	assert(fmt(L"[%6.2s]", L"abcd") == L"[    ab]");
 	assert(fmt(L"%S", "narrow") == L"narrow");
+	assert(fmt(L"%8S|%C", "narrow", 'n') == L"  narrow|n");
 	assert(fmt(L"%c", (wchar_t)0x20AC) == L"€");
 	assert(fmt(L"%s %d %c%%", L"Gold", 42, (wchar_t)'g') == L"Gold 42 g%");
 	assert(fmt(L"%.2f %ld %5d", 1.5, 7L, 3) == L"1.50 7     3");

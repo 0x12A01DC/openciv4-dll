@@ -12,8 +12,12 @@
 #include <cstring>
 #include <cwchar>
 #include <dlfcn.h>
+#ifdef __APPLE__
 #include <malloc/malloc.h>
 #include <mach-o/dyld.h>
+#else
+#include <malloc.h>
+#endif
 #include <unistd.h>
 #include <strings.h>
 #include <time.h>
@@ -178,7 +182,11 @@ inline DWORD GetEnvironmentVariableA(const char* name, char* out, DWORD size)
 	return DWORD(std::strlen(out));
 }
 inline int _putenv_s(const char* name, const char* value) { return setenv(name, value, 1); }
+#ifdef __APPLE__
 inline size_t _msize(void* p) { return malloc_size(p); }
+#else
+inline size_t _msize(void* p) { return malloc_usable_size(p); }
+#endif
 // The FPU state is the same on every thread here: nothing to carry across.
 inline int _controlfp_s(unsigned int* current, unsigned int, unsigned int) { if (current) *current = 0; return 0; }
 inline HMODULE GetModuleHandleA(const char*) { return nullptr; }

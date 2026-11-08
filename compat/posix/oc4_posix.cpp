@@ -135,8 +135,15 @@ DWORD GetModuleFileNameW(HMODULE, wchar_t* path, DWORD size)
 {
 	char narrow[4096];
 	uint32_t length = sizeof narrow;
+#ifdef __APPLE__
 	if (_NSGetExecutablePath(narrow, &length) != 0 || !size)
 		return 0;
+#else
+	const ssize_t got = readlink("/proc/self/exe", narrow, length - 1);
+	if (got < 0 || !size)
+		return 0;
+	narrow[got] = 0;
+#endif
 	const int n = MultiByteToWideChar(CP_UTF8, 0, narrow, -1, path, int(size));
 	path[size - 1] = 0;
 	return n > 0 ? DWORD(n - 1) : 0;
@@ -163,8 +170,7 @@ int oc4_vswprintf(wchar_t* out, size_t count, const wchar_t* format, va_list arg
 			posix.push_back(L'l'); // wide argument, Microsoft's default in a wide format
 		else if (*p == L'S' || *p == L'C')
 		{
-			posix.push_back(L'h');
-			posix.push_back(*p == L'S' ? L's' : L'c');
+			posix.push_back(*p == L'S' ? L's' : L'c'); // narrow argument, the C standard's default in a wide format
 			continue;
 		}
 		else if (hasLength)

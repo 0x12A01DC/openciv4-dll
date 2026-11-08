@@ -924,8 +924,8 @@ void CvPlot::nukeExplosion(int iRange, CvUnit* pNukeUnit)
 					}
 
 					// openciv4: the order Windows draws in (C++ leaves it to the compiler)
-					const int iNuked1 = GC.getGameINLINE().getSorenRandNum(GC.getDefineINT("NUKE_POPULATION_DEATH_RAND_1"), "Population Nuked 1");
 					const int iNuked2 = GC.getGameINLINE().getSorenRandNum(GC.getDefineINT("NUKE_POPULATION_DEATH_RAND_2"), "Population Nuked 2");
+					const int iNuked1 = GC.getGameINLINE().getSorenRandNum(GC.getDefineINT("NUKE_POPULATION_DEATH_RAND_1"), "Population Nuked 1");
 					iNukedPopulation = ((pLoopCity->getPopulation() * (GC.getDefineINT("NUKE_POPULATION_DEATH_BASE") + iNuked1 + iNuked2)) / 100);
 
 					iNukedPopulation *= std::max(0, (pLoopCity->getNukeModifier() + 100));

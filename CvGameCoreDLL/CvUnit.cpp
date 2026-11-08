@@ -4259,8 +4259,8 @@ bool CvUnit::airBomb(int iX, int iY)
 		if (pPlot->getImprovementType() != NO_IMPROVEMENT)
 		{
 			// openciv4: the order Windows draws in (C++ leaves it to the compiler)
-			const int iBombOffense = GC.getGameINLINE().getSorenRandNum(airBombCurrRate(), "Air Bomb - Offense");
 			const int iBombDefense = GC.getGameINLINE().getSorenRandNum(GC.getImprovementInfo(pPlot->getImprovementType()).getAirBombDefense(), "Air Bomb - Defense");
+			const int iBombOffense = GC.getGameINLINE().getSorenRandNum(airBombCurrRate(), "Air Bomb - Offense");
 			if (iBombOffense >= iBombDefense)
 			{
 				szBuffer = gDLL->getText("TXT_KEY_MISC_YOU_UNIT_DESTROYED_IMP", getNameKey(), GC.getImprovementInfo(pPlot->getImprovementType()).getTextKeyWide());
