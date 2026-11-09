@@ -83,7 +83,7 @@ cmake --build build --target CvGameCoreDLL_mod -- -k 0
 every file that fails.
 
 What `oc4_add_game_core` sets up for the mod: C++20, the SDK's lenient conformance
-(`/permissive`, `/Zc:forScope-`), Windows-1252 as the source and execution character set,
+(`/permissive`), Windows-1252 as the source and execution character set,
 the SDK's legacy warnings off, `CvGameCoreDLL.h` as the precompiled header, `compat/` first on
 the include path (so `#include <boost/python.hpp>` and `<hash_map>` find the replacements),
 and Python 2.7 x64 with pybind11.
@@ -151,8 +151,7 @@ random numbers feed it, the order of calls to the game's random generator must n
 For example a shuffle that took `rand()` becomes the same Fisher-Yates loop on `rand()`.
 
 **Other VC7.1-only syntax.** C-style casts applied to class templates, `_THROW` and other
-macros of the old library, `for` loop variables used after the loop (`/Zc:forScope-` keeps
-that working), templates that need `typename`, C++20's reversed `operator==` candidates
+macros of the old library, `for` loop variables used after the loop, templates that need `typename`, C++20's reversed `operator==` candidates
 making comparisons of the mod's own iterator classes ambiguous (declare the operator
 `const`, with both operands the same type). A bundled `stdint.h` from the 2003 era conflicts
 with the compiler's own: delete it.

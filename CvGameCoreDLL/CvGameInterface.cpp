@@ -1993,7 +1993,7 @@ void CvGame::startFlyoutMenu(const CvPlot* pPlot, std::vector<CvFlyoutMenuData>&
 				if (eConscriptUnit != NO_UNIT)
 				{
 					szBuffer = gDLL->getText("TXT_KEY_DRAFT_UNIT", GC.getUnitInfo(eConscriptUnit).getDescription(), pCity->getConscriptPopulation());
-					aFlyoutItems.push_back(CvFlyoutMenuData(FLYOUT_CONSCRIPT, iI, pPlot->getX_INLINE(), pPlot->getY_INLINE(), szBuffer));
+					aFlyoutItems.push_back(CvFlyoutMenuData(FLYOUT_CONSCRIPT, static_cast<int>(eConscriptUnit), pPlot->getX_INLINE(), pPlot->getY_INLINE(), szBuffer));
 				}
 			}
 		}
