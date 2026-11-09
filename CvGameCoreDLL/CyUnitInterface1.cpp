@@ -67,8 +67,8 @@ void CyUnitPythonInterface1(python::class_<CyUnit>& x)
 		.def("canRecon", &CyUnit::canRecon, "bool ()")
 		.def("canReconAt", &CyUnit::canReconAt, "bool (CyPlot* pPlot, int iX, int iY)")
 
-		.def("canRecon", &CyUnit::canParadrop, "bool ()")
-		.def("canReconAt", &CyUnit::canParadropAt, "bool (CyPlot* pPlot, int iX, int iY)")
+		.def("canParadrop", &CyUnit::canParadrop, "bool ()")
+		.def("canParadropAt", &CyUnit::canParadropAt, "bool (CyPlot* pPlot, int iX, int iY)")
 
 		.def("canAirBomb", &CyUnit::canAirBomb, "bool ()")
 		.def("canAirBombAt", &CyUnit::canAirBombAt, "bool (CyPlot* pPlot, int iX, int iY)")

@@ -15,7 +15,7 @@ m_pGameTextMgr(NULL)
 }
 
 CyGameTextMgr::CyGameTextMgr(CvGameTextMgr* pGameTextMgr) : 
-m_pGameTextMgr(m_pGameTextMgr)
+m_pGameTextMgr(pGameTextMgr)
 {}
 
 void CyGameTextMgr::Reset()
