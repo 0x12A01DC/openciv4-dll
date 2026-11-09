@@ -31,7 +31,9 @@
 #include <algorithm>	// openciv4: VC7.1 pulled this in transitively
 
 // openciv4: the host includes these headers too and imports the DLL's classes.
-#ifdef OC4_GAMECORE_IMPORT
+#if !defined(_WIN32)
+#define DllExport   __attribute__((visibility("default")))
+#elif defined(OC4_GAMECORE_IMPORT)
 #define DllExport   __declspec( dllimport )
 #else
 #define DllExport   __declspec( dllexport )
@@ -127,7 +129,7 @@ namespace NiAnimationKey
 typedef unsigned char    byte;
 typedef unsigned short   word;
 typedef unsigned int     uint;
-typedef unsigned long    dword;
+typedef unsigned int     dword;	// openciv4: 32 bits as on Windows
 typedef unsigned __int64 qword;
 typedef wchar_t          wchar;
 

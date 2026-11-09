@@ -4258,8 +4258,10 @@ bool CvUnit::airBomb(int iX, int iY)
 	{
 		if (pPlot->getImprovementType() != NO_IMPROVEMENT)
 		{
-			if (GC.getGameINLINE().getSorenRandNum(airBombCurrRate(), "Air Bomb - Offense") >=
-					GC.getGameINLINE().getSorenRandNum(GC.getImprovementInfo(pPlot->getImprovementType()).getAirBombDefense(), "Air Bomb - Defense"))
+			// openciv4: the order Windows draws in (C++ leaves it to the compiler)
+			const int iBombDefense = GC.getGameINLINE().getSorenRandNum(GC.getImprovementInfo(pPlot->getImprovementType()).getAirBombDefense(), "Air Bomb - Defense");
+			const int iBombOffense = GC.getGameINLINE().getSorenRandNum(airBombCurrRate(), "Air Bomb - Offense");
+			if (iBombOffense >= iBombDefense)
 			{
 				szBuffer = gDLL->getText("TXT_KEY_MISC_YOU_UNIT_DESTROYED_IMP", getNameKey(), GC.getImprovementInfo(pPlot->getImprovementType()).getTextKeyWide());
 				gDLL->getInterfaceIFace()->addMessage(getOwnerINLINE(), true, GC.getEVENT_MESSAGE_TIME(), szBuffer, "AS2D_PILLAGE", MESSAGE_TYPE_INFO, getButton(), (ColorTypes)GC.getInfoTypeForString("COLOR_GREEN"), pPlot->getX_INLINE(), pPlot->getY_INLINE());
@@ -6835,7 +6837,7 @@ CvCity* CvUnit::getUpgradeCity(UnitTypes eUnit, bool bSearch, int* iSearchValue)
 {
 	if (eUnit == NO_UNIT)
 	{
-		return false;
+		return NULL;
 	}
 	
 	CvPlayerAI& kPlayer = GET_PLAYER(getOwnerINLINE());
@@ -6843,17 +6845,17 @@ CvCity* CvUnit::getUpgradeCity(UnitTypes eUnit, bool bSearch, int* iSearchValue)
 
 	if (GC.getCivilizationInfo(kPlayer.getCivilizationType()).getCivilizationUnits(kUnitInfo.getUnitClassType()) != eUnit)
 	{
-		return false;
+		return NULL;
 	}
 
 	if (!upgradeAvailable(getUnitType(), ((UnitClassTypes)(kUnitInfo.getUnitClassType()))))
 	{
-		return false;
+		return NULL;
 	}
 
 	if (kUnitInfo.getCargoSpace() < getCargo())
 	{
-		return false;
+		return NULL;
 	}
 
 	CLLNode<IDInfo>* pUnitNode = plot()->headUnitNode();
@@ -6868,7 +6870,7 @@ CvCity* CvUnit::getUpgradeCity(UnitTypes eUnit, bool bSearch, int* iSearchValue)
 			{
 				if (kUnitInfo.getSpecialCargo() != pLoopUnit->getSpecialUnitType())
 				{
-					return false;
+					return NULL;
 				}
 			}
 
@@ -6876,7 +6878,7 @@ CvCity* CvUnit::getUpgradeCity(UnitTypes eUnit, bool bSearch, int* iSearchValue)
 			{
 				if (kUnitInfo.getDomainCargo() != pLoopUnit->getDomainType())
 				{
-					return false;
+					return NULL;
 				}
 			}
 		}

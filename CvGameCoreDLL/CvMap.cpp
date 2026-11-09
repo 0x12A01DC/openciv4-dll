@@ -580,7 +580,10 @@ CvPlot* CvMap::syncRandPlot(int iFlags, int iArea, int iMinUnitDistance, int iTi
 
 	while (iCount < iTimeout)
 	{
-		pTestPlot = plotSorenINLINE(GC.getGameINLINE().getSorenRandNum(getGridWidthINLINE(), "Rand Plot Width"), GC.getGameINLINE().getSorenRandNum(getGridHeightINLINE(), "Rand Plot Height"));
+		// openciv4: the order Windows draws in (C++ leaves it to the compiler)
+		const int iRandY = GC.getGameINLINE().getSorenRandNum(getGridHeightINLINE(), "Rand Plot Height");
+		const int iRandX = GC.getGameINLINE().getSorenRandNum(getGridWidthINLINE(), "Rand Plot Width");
+		pTestPlot = plotSorenINLINE(iRandX, iRandY);
 
 		FAssertMsg(pTestPlot != NULL, "TestPlot is not assigned a valid value");
 

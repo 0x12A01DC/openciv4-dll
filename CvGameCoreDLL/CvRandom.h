@@ -29,7 +29,7 @@ public:
 
 protected:
 
-	unsigned long m_ulRandomSeed;
+	unsigned int m_ulRandomSeed;	// openciv4: 32 bits as on Windows (it enters the sync checksum and saves)
 };
 
 #endif

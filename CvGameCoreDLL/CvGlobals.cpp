@@ -31,7 +31,7 @@
 template <class T>
 void deleteInfoArray(std::vector<T*>& array)
 {
-	for (std::vector<T*>::iterator it = array.begin(); it != array.end(); ++it)
+	for (typename std::vector<T*>::iterator it = array.begin(); it != array.end(); ++it)
 	{
 		SAFE_DELETE(*it);
 	}
@@ -59,7 +59,7 @@ bool readInfoArray(FDataStreamBase* pStream, std::vector<T*>& array, const char*
 	}
 
 	int iIndex = 0;
-	for (std::vector<T*>::iterator it = array.begin(); it != array.end(); ++it)
+	for (typename std::vector<T*>::iterator it = array.begin(); it != array.end(); ++it)
 	{
 		(*it)->read(pStream);
 		GC.setInfoTypeFromString((*it)->getType(), iIndex);
@@ -75,7 +75,7 @@ bool writeInfoArray(FDataStreamBase* pStream,  std::vector<T*>& array)
 	int iSize = sizeof(T);
 	pStream->Write(iSize);
 	pStream->Write(array.size());
-	for (std::vector<T*>::iterator it = array.begin(); it != array.end(); ++it)
+	for (typename std::vector<T*>::iterator it = array.begin(); it != array.end(); ++it)
 	{
 		(*it)->write(pStream);
 	}

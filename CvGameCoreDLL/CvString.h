@@ -41,7 +41,12 @@ public:
 			if (iLen)
 			{
 				wchar *w = new wchar[iLen+1];
+#ifdef _WIN32
 				swprintf(w, L"%S", s);	// convert
+#else
+				for (int i = 0; i <= iLen; ++i)	// openciv4: byte for byte, as the C locale does on Windows
+					w[i] = (unsigned char)s[i];
+#endif
 				assign(w);
 				delete [] w;
 			}
@@ -217,7 +222,12 @@ public:
 			if (iLen)
 			{
 				char *s = new char[iLen+1];
+#ifdef _WIN32
 				sprintf(s, "%S", w);	// convert
+#else
+				for (int i = 0; i <= iLen; ++i)	// openciv4: byte for byte, as the C locale does on Windows
+					s[i] = (char)w[i];
+#endif
 				assign(s);
 				delete [] s;
 			}

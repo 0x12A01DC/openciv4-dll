@@ -8596,7 +8596,7 @@ bool CvUnitAI::AI_spreadCorporation()
 
 	CorporationTypes eCorporation = NO_CORPORATION;	
 
-	for (int iI = 0; iI < GC.getNumCorporationInfos(); ++iI)
+	int iI; for (iI = 0; iI < GC.getNumCorporationInfos(); ++iI)
 	{
 		if (m_pUnitInfo->getCorporationSpreads((CorporationTypes)iI) > 0)
 		{

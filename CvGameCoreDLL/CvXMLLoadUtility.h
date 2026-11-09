@@ -18,6 +18,8 @@
 //#include "CvStructs.h"
 #include "CvInfos.h"
 #include "CvGlobals.h"
+#include "CvDLLXMLIFaceBase.h"	// openciv4: the templates below use these at definition
+#include "FVariableSystem.h"
 
 class FXmlSchemaCache;
 class FXml;
